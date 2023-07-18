@@ -44,4 +44,4 @@ CXPlayerTester application:
 	java -cp ".." connectx.CXGame 6 7 4 connectx.L0.L0 connectx.budspencermiopadre.budspencermiopadre
 
 - Comando per far partire il gioco senza vedere cosa succede
-	java -cp ".." connectx.CXGame 6 7 4 connectx.L0.L0 connectx.budspencermiopadre.budspencermiopadre -q
+	java -cp ".." connectx.CXPlayerTester 6 7 4 connectx.L0.L0 connectx.budspencermiopadre.budspencermiopadre
