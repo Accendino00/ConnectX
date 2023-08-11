@@ -43,31 +43,32 @@ public class CXBoard {
 	public final int N;
 
 	/**
-	 * Number of symbols to be aligned (horizontally, vertically, diagonally) for a  win
+	 * Number of symbols to be aligned (horizontally, vertically, diagonally) for a
+	 * win
 	 */
 	public final int X;
 
 	// grid for the board
 	protected CXCellState[][] B;
 
-	protected LinkedList<CXCell> MC;   // Marked Cells stack (used to undo)
-	protected int                RP[]; // First free row position
-	protected TreeSet<Integer>   AC;   // Availabe (not full) columns
-	
+	protected LinkedList<CXCell> MC; // Marked Cells stack (used to undo)
+	protected int RP[]; // First free row position
+	protected TreeSet<Integer> AC; // Availabe (not full) columns
+
 	// we define characters for players (PR for Red, PY for Yellow)
-	private final CXCellState[] Player = {CXCellState.P1, CXCellState.P2};
+	private final CXCellState[] Player = { CXCellState.P1, CXCellState.P2 };
 
 	protected int currentPlayer; // currentPlayer plays next move
 
 	protected CXGameState gameState; // game state
-
 
 	/**
 	 * Create a board of size MxN and initialize the game parameters
 	 * 
 	 * @param M Board rows
 	 * @param N Board columns
-   * @param X Number of symbols to be aligned (horizontally, vertically, diagonally) for a win
+	 * @param X Number of symbols to be aligned (horizontally, vertically,
+	 *          diagonally) for a win
 	 *
 	 * @throws IllegalArgumentException If M,N are smaller than 1
 	 */
@@ -83,7 +84,7 @@ public class CXBoard {
 		this.N = N;
 		this.X = X;
 
-		B  = new CXCellState[M][N];
+		B = new CXCellState[M][N];
 		MC = new LinkedList<CXCell>();
 		RP = new int[N];
 		AC = new TreeSet<Integer>();
@@ -96,7 +97,7 @@ public class CXBoard {
 	 */
 	public void reset() {
 		currentPlayer = 0;
-		gameState     = CXGameState.OPEN;
+		gameState = CXGameState.OPEN;
 		initBoard();
 		initDataStructures();
 	}
@@ -108,12 +109,12 @@ public class CXBoard {
 				B[i][j] = CXCellState.FREE;
 	}
 
-	//Resets the marked cells list and other data structures
+	// Resets the marked cells list and other data structures
 	private void initDataStructures() {
 		this.MC.clear();
 		this.AC.clear();
 		for (int j = 0; j < N; j++) {
-			RP[j] = M-1;
+			RP[j] = M - 1;
 			AC.add(j);
 		}
 	}
@@ -125,7 +126,8 @@ public class CXBoard {
 	 * @param j j-th column
 	 *
 	 * @return State of the <code>i,j</code> cell (FREE,P1,P2)
-	 * @throws IndexOutOfBoundsException If <code>i,j</code> are out of matrix bounds
+	 * @throws IndexOutOfBoundsException If <code>i,j</code> are out of matrix
+	 *                                   bounds
 	 * 
 	 */
 	public CXCellState cellState(int i, int j) throws IndexOutOfBoundsException {
@@ -136,14 +138,14 @@ public class CXBoard {
 	}
 
 	/**
-   * Check whether a column is full 
-   * 
-   * @param col column number
+	 * Check whether a column is full
 	 * 
-	 * @return true if col is outside matrix bounds of if it is full  
-   */
+	 * @param col column number
+	 * 
+	 * @return true if col is outside matrix bounds of if it is full
+	 */
 	public boolean fullColumn(int col) {
-		return  col < 0 || col >= N || RP[col] == -1; 
+		return col < 0 || col >= N || RP[col] == -1;
 	}
 
 	/**
@@ -152,9 +154,9 @@ public class CXBoard {
 	 * @return CXCell object or null
 	 */
 	public CXCell getLastMove() {
-		if (MC.size() == 0) 
+		if (MC.size() == 0)
 			return null;
-		else 
+		else
 			return MC.peekLast();
 	}
 
@@ -182,9 +184,9 @@ public class CXBoard {
 	 * @return number of free cells
 	 */
 	public int numOfFreeCells() {
-		return M*N-MC.size();
+		return M * N - MC.size();
 	}
-	
+
 	/**
 	 * Returns the number of marked cells in the game board.
 	 *
@@ -203,12 +205,14 @@ public class CXBoard {
 		if (gameState != CXGameState.OPEN) { // Game already ended
 			throw new IllegalStateException("Game ended!");
 		} else if (!(0 <= col && col < N)) { // Column index out of matrix bounds
-			throw new IndexOutOfBoundsException("Index " + col + " out of matrix bounds\n" + "Column must be between 0 and " + (N - 1));
-		} else if (RP[col] == -1) {          // Column full
+			throw new IndexOutOfBoundsException(
+					"Index " + col + " out of matrix bounds\n" + "Column must be between 0 and " + (N - 1));
+		} else if (RP[col] == -1) { // Column full
 			throw new IllegalStateException("Column " + col + " is full.");
 		} else {
 			int row = RP[col]--;
-			if (RP[col] == -1) AC.remove(col);
+			if (RP[col] == -1)
+				AC.remove(col);
 			B[row][col] = Player[currentPlayer];
 			CXCell newc = new CXCell(row, col, Player[currentPlayer]);
 			MC.add(newc); // Add move to the history
@@ -237,7 +241,8 @@ public class CXBoard {
 
 			B[oldc.i][oldc.j] = CXCellState.FREE;
 			RP[oldc.j]++;
-			if(RP[oldc.j] == 0) AC.add(oldc.j); 
+			if (RP[oldc.j] == 0)
+				AC.add(oldc.j);
 
 			currentPlayer = (currentPlayer + 1) % 2;
 			gameState = CXGameState.OPEN;
@@ -258,28 +263,28 @@ public class CXBoard {
 	}
 
 	/**
-   * Returns the list of still available columns in array format.
-   * <p>
-   * This is the list of still playable columns in the matrix.
-   * </p>
-   * 
-   * @return List of available column indexes 
-   */
-  public Integer[] getAvailableColumns() {
+	 * Returns the list of still available columns in array format.
+	 * <p>
+	 * This is the list of still playable columns in the matrix.
+	 * </p>
+	 * 
+	 * @return List of available column indexes
+	 */
+	public Integer[] getAvailableColumns() {
 		return AC.toArray(new Integer[AC.size()]);
-  }
+	}
 
 	/**
-   * Returns a copy of the main board
-   *
-   * @return An MxN matrix of cell statest
-   */
+	 * Returns a copy of the main board
+	 *
+	 * @return An MxN matrix of cell statest
+	 */
 	public CXCellState[][] getBoard() {
 		CXCellState[][] C = new CXCellState[M][N];
 
-		for(int i = 0; i < M; i++)
-			for(int j = 0; j < N; j++)
-				C[i][j] = B[i][j];		
+		for (int i = 0; i < M; i++)
+			for (int j = 0; j < N; j++)
+				C[i][j] = B[i][j];
 
 		return C;
 	}
@@ -290,12 +295,11 @@ public class CXBoard {
 	 * @return A CXBoard
 	 */
 	public CXBoard copy() {
-		CXBoard C = new CXBoard(M,N,X);
-		for(CXCell c : this.getMarkedCells())
+		CXBoard C = new CXBoard(M, N, X);
+		for (CXCell c : this.getMarkedCells())
 			C.markColumn(c.j);
 		return C;
-  }
-
+	}
 
 	// Check winning state from cell i, j
 	private boolean isWinningMove(int i, int j) {
@@ -308,26 +312,37 @@ public class CXBoard {
 
 		// Horizontal check
 		n = 1;
-		for (int k = 1; j-k >= 0 && B[i][j-k] == s; k++) n++; // backward check
-		for (int k = 1; j+k <  N && B[i][j+k] == s; k++) n++; // forward check
-		if (n >= X) return true;
+		for (int k = 1; j - k >= 0 && B[i][j - k] == s; k++)
+			n++; // backward check
+		for (int k = 1; j + k < N && B[i][j + k] == s; k++)
+			n++; // forward check
+		if (n >= X)
+			return true;
 
 		// Vertical check
 		n = 1;
-		for (int k = 1; i+k <  M && B[i+k][j] == s; k++) n++;
-		if (n >= X) return true;
+		for (int k = 1; i + k < M && B[i + k][j] == s; k++)
+			n++;
+		if (n >= X)
+			return true;
 
 		// Diagonal check
 		n = 1;
-		for (int k = 1; i-k >= 0 && j-k >= 0 && B[i-k][j-k] == s; k++) n++; // backward check
-		for (int k = 1; i+k <  M && j+k <  N && B[i+k][j+k] == s; k++) n++; // forward check
-		if (n >= X) return true;
+		for (int k = 1; i - k >= 0 && j - k >= 0 && B[i - k][j - k] == s; k++)
+			n++; // backward check
+		for (int k = 1; i + k < M && j + k < N && B[i + k][j + k] == s; k++)
+			n++; // forward check
+		if (n >= X)
+			return true;
 
 		// Anti-diagonal check
 		n = 1;
-		for (int k = 1; i-k >= 0 && j+k <  N && B[i-k][j+k] == s; k++) n++; // backward check
-		for (int k = 1; i+k <  M && j-k >= 0 && B[i+k][j-k] == s; k++) n++; // forward check
-		if (n >= X) return true;
+		for (int k = 1; i - k >= 0 && j + k < N && B[i - k][j + k] == s; k++)
+			n++; // backward check
+		for (int k = 1; i + k < M && j - k >= 0 && B[i + k][j - k] == s; k++)
+			n++; // forward check
+		if (n >= X)
+			return true;
 
 		return false;
 	}
