@@ -24,4 +24,4 @@ Conclusioni nostre: MCTS sarebbe una soluzione ideale quando non si riesce ad ar
 
 Altri metodi, ovvero l'ibrido tra MCTS e MM, oppure modi puramente euristici, oppure ancora metodi che aggiungono "complicità" di calcolo tendenzialmente riducono la performance. Sembra piuttosto che il numero di mosse che si possono guardare in avanti sia il fattore più importante per la performance.
 
-Inoltre, troviamo che la ricerca di euristiche complesse sia una difficoltà che difficilmente sarà appagata, in quanto probabilmente non riuscirà a battere MCTS. Se lo riesce a battere, probabilmente lo sarà solo per alcuni dei valori di M, N o X. Quindi questo non sarà un focus del nostro progetto.
+Inoltre, troviamo che la ricerca di euristiche complesse sia una difficoltà che difficilmente sarà appagata, in quanto probabilmente non riuscirà a battere MCTS. Se lo riesce a battere, probabilmente sarà in grado di farlo solo per alcuni dei valori di M, N o X. Quindi questo non sarà un focus del nostro progetto.
