@@ -20,6 +20,8 @@ Il progetto consiste nella realizzazione di un gioco chiamato Connect X, che è 
   - Oltre alle cose relative all'AI, che non implementeremo, MCTS sembra essere migliore quando la quantità di mosse è maggiore, mentre MM&ABP è migliore quando la quantità di mosse è minore. 
   - [https://arxiv.org/pdf/2210.08263.pdf]
 
-Conclusioni nostre: MCTS sarebbe una soluzione ideale quando non si riesce ad arrivare a tutte le foglie. Genericamente, per Connect 4 giocih più piccoli si può considerare quindi MM&ABP come una soluzione migliore, mentre per tutti gli altri casi MCTS è migliore.
+Conclusioni nostre: MCTS sarebbe una soluzione ideale quando non si riesce ad arrivare a tutte le foglie. Genericamente, per Connect 4 giochi più piccoli si può considerare quindi MM&ABP come una soluzione migliore, mentre per tutti gli altri casi MCTS è migliore.
 
 Altri metodi, ovvero l'ibrido tra MCTS e MM, oppure modi puramente euristici, oppure ancora metodi che aggiungono "complicità" di calcolo tendenzialmente riducono la performance. Sembra piuttosto che il numero di mosse che si possono guardare in avanti sia il fattore più importante per la performance.
+
+Inoltre, troviamo che la ricerca di euristiche complesse sia una difficoltà che difficilmente sarà appagata, in quanto probabilmente non riuscirà a battere MCTS. Se lo riesce a battere, probabilmente lo sarà solo per alcuni dei valori di M, N o X. Quindi questo non sarà un focus del nostro progetto.
