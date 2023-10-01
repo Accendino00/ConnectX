@@ -45,7 +45,7 @@ public class L0 implements CXPlayer {
 
 	public String playerName() {
 		return "L0";
-	}
+	}	
 }
 	
 	

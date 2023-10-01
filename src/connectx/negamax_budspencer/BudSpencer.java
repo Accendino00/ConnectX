@@ -108,32 +108,6 @@ public class BudSpencer implements CXPlayer {
 
                     B.unmarkColumn();
                 }
-
-/*
-                // Now we check if we can block the adversary from winning
-                // We mark a random column and see if he can has a winning move
-                if (ava[0] != i)
-                    state = B.markColumn(ava[0]);
-                else if (ava.length > 1)
-                    state = B.markColumn(ava[1]);
-                else // If we can't play more than 1 move we skip this column
-                    continue; 
-
-                // If there is a winning move that we haven't checked yet or a draw we skip this column
-                if (state != CXGameState.OPEN){
-                    B.unmarkColumn();
-                    continue;
-                }
-                    
-                // We mark the column and check if they win, if they do we save the column
-                state = B.markColumn(i);
-                if (state == yourWin) {
-                    returnCol = i;
-                }
-
-                B.unmarkColumn();
-                B.unmarkColumn();
-*/
             }
         } catch (TimeLimitExceededException e) {
             System.out.println("Time limit exceeded");
