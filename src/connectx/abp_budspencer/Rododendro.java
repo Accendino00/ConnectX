@@ -1,6 +1,7 @@
 package connectx.abp_budspencer;
 
 import connectx.CXBoard;
+import connectx.CXCellState;
 import connectx.CXPlayer;
 import connectx.CXGameState;
 
@@ -17,10 +18,6 @@ public class Rododendro implements CXPlayer{
 
     private StartEuristicsCreator euristicsCreator;
 
-
-    public Rododendro() {  //constructor
-        super("Rododendro");    //superclass
-    }
 
         @Override
         public void initPlayer(int M, int N, int X, boolean first, int timeout_in_secs) {
@@ -46,12 +43,12 @@ public class Rododendro implements CXPlayer{
         public int selectColumn(CXBoard b) {
             int move = 0;
             int max = Integer.MIN_VALUE;
-            int depth = 5;
+            int depth = 8;
             int alpha = Integer.MIN_VALUE;
             int beta = Integer.MAX_VALUE;
-            for (int i = 0; i < b.N; i++) {
+            for (int i = 0; i < b.M; i++) {
                 if (!(b.fullColumn(i))) {
-                    int value = minimax(b, depth, alpha, beta, true);
+                    int value = minimax(b, depth, alpha, beta, false);
                     if (value > max) {
                         max = value;
                         move = i;
@@ -63,15 +60,15 @@ public class Rododendro implements CXPlayer{
     
         private int minimax(CXBoard b, int depth, int alpha, int beta, boolean maximizingPlayer) {
             if (depth == 0 || b.gameState() == myWin || b.gameState() == yourWin) {
-                return evaluate(b);
+                return evaluate(b, 3);
             }
             if (maximizingPlayer) {
                 int max = Integer.MIN_VALUE;
-                for (int i = 0; i < b.getWidth(); i++) {
-                    if (b.canPlay(i)) {
-                        b.play(i);
+                for (int i = 0; i < b.M; i++) {
+                    if (!(b.fullColumn(i))) {
+                        b.markColumn(i);
                         int value = minimax(b, depth - 1, alpha, beta, false);
-                        b.undo();
+                        b.unmarkColumn();
                         max = Math.max(max, value);
                         alpha = Math.max(alpha, value);
                         if (beta <= alpha) {
@@ -82,11 +79,11 @@ public class Rododendro implements CXPlayer{
                 return max;
             } else {
                 int min = Integer.MAX_VALUE;
-                for (int i = 0; i < b.getWidth(); i++) {
-                    if (b.canPlay(i)) {
-                        b.play(i);
+                for (int i = 0; i < b.M; i++) {
+                    if (!(b.fullColumn(i))) {
+                        b.markColumn(i);
                         int value = minimax(b, depth - 1, alpha, beta, true);
-                        b.undo();
+                        b.unmarkColumn();
                         min = Math.min(min, value);
                         beta = Math.min(beta, value);
                         if (beta <= alpha) {
@@ -97,19 +94,63 @@ public class Rododendro implements CXPlayer{
                 return min;
             }
         }
-    
-        private int evaluate(CXBoard b) {
+        
+        /* 
+        //iterative deepening
+        private int iterativeDeepening(CXBoard b, int depth, int alpha, int beta, boolean maximizingPlayer) {
+            int move = 0;
+            int max = Integer.MIN_VALUE;
+            for (int i = 0; i < b.M; i++) {
+                if (!(b.fullColumn(i))) {
+                    b.markColumn(i);
+                    int value = minimax(b, depth - 1, alpha, beta, false);
+                    b.unmarkColumn();
+                    if (value > max) {
+                        max = value;
+                        move = i;
+                    }
+                }
+            }
+            return move;
+        }
+        */
+
+        //valutazione
+        private int evaluate(CXBoard b, int i) {
             int score = 0;
-            int[][] board = b.getBoard();
-            int width = b.getWidth();
-            int height = b.getHeight();
-            int player = b.getCurrentPlayer();
+            CXCellState[][] board = b.getBoard();
+            int width = b.M;
+            int height = b.N;
+            int player = b.currentPlayer();
             int opponent = 3 - player;
             int[][][] patterns = {
                     {{0, 0}, {0, 1}, {0, 2}, {0, 3}},
                     {{0, 0}, {1, 0}, {2, 0}, {3, 0}},
                     {{0, 0}, {1, 1}, {2, 2}, {3, 3}},
                     {{0, 0}, {1, -1}, {2, -2}, {3, -3}} // 4    4   
+            };
+            for (int[][] pattern : patterns) {
+                for (int i = 0; i < width - 3; i++) {
+                    for (int j = 0; j < height - 3; j++) {
+                        int myCount = 0;
+                        int yourCount = 0;
+                        for (int[] p : pattern) {
+                            if (board[i + p[0]][j + p[1]].ordinal() == player - 1) {
+                                myCount++;
+                            } else if (board[i + p[0]][j + p[1]].ordinal() == opponent - 1) {
+                                yourCount++;
+                            }
+                        }
+                        if (myCount > 0 && yourCount == 0) {
+                            score += Math.pow(10, myCount);
+                        } else if (yourCount > 0 && myCount == 0) {
+                            score -= Math.pow(10, yourCount);
+                        }
+                    }
+                }
+            }
+            return score;
+        }
 }
 
 

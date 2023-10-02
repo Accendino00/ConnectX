@@ -40,7 +40,7 @@ function executeJavaCommand(className, args) {
 
 async function main() {
   try {
-     let additionalArgs = ` connectx.negamax_budspencer.BudSpencer connectx.L1.L1`;
+     let additionalArgs = ` connectx.negamaxr_budspencer.BudSpencer connectx.L1.L1`;
     //let additionalArgs = ` connectx.L1.L1 connectx.negamax_budspencer.BudSpencer`;
     // let additionalArgs = ` connectx.negamaxr_budspencer.BudSpencer connectx.negamax_budspencer.BudSpencer`;
     // let additionalArgs = ` connectx.negamax_budspencer.BudSpencer connectx.negamaxr_budspencer.BudSpencer`;
