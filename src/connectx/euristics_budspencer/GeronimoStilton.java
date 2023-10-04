@@ -21,20 +21,89 @@ public class GeronimoStilton implements CXPlayer {
     private CXGameState myWin;
     private CXGameState yourWin;
 
+    private StartEuristicsCreator euristicCreator;
+
+    // Given a board B, a position i, j and a direction from checkDirection(), check if the next cell in that direction is free and playable and return the column
+    int checkNextEmpty(CXBoard B, int i, int j, CXCellState player){
+        int direction = checkDirection(B, i, j, player);
+        switch(direction){
+            case -4:
+                while(B.cellState(i+1, j-1) != CXCellState.FREE && (0 < i+1 && i+1 < B.N) && (0 < j-1 && j-1 < B.M)){
+                    i++;    
+                    j--;
+                }
+                break;
+            case -3:
+                while(B.cellState(i+1, j+1) != CXCellState.FREE && (0 < i+1 && i+1 < B.N) && (0 < j+1 && j+1 < B.M)){
+                    i++;
+                    j++;
+                }
+                break;
+            case -2:
+                while(B.cellState(i, j-1) != CXCellState.FREE && (0 < i && i < B.N) && (0 < j-1 && j-1 < B.M)){
+                    j--;
+                }
+                break;
+            case -1:
+                while(B.cellState(i-1, j) != CXCellState.FREE && (0 < i-1 && i-1 < B.N) && (0 < j && j < B.M)){
+                    i--;
+                }
+                break;
+            case 1:
+                while(B.cellState(i+1, j) != CXCellState.FREE && (0 < i+1 && i+1 < B.N) && (0 < j && j < B.M)){
+                    i++;
+                }
+                break;
+            case 2:
+                while(B.cellState(i, j+1) != CXCellState.FREE && (0 < i && i < B.N) && (0 < j+1 && j + 1< B.M)){
+                    j++;
+                }
+                break;
+            case 3:
+                while(B.cellState(i-1, j-1) != CXCellState.FREE && (0 < i-1 && i-1 < B.N) && (0 < j-1 && j-1 < B.M)){
+                    i--;
+                    j--;
+                }
+                break;
+            case 4:
+                while(B.cellState(i-1, j+1) != CXCellState.FREE && (0 < i-1 && i-1 < B.N) && (0 < j+1 && j+1 < B.M)){
+                    i--;
+                    j++;
+                }
+                break;
+        }
+        return i;
+    }   
+    
+
     int checkDirection(CXBoard B, int i, int j, CXCellState player){
-        // direction = 0 -> vertical, direction = 1 -> horizontal, direction = 2 -> diagonal, direction = 3 -> anti-diagonal
+        // direction = 1 -> vertical, direction = 2 -> horizontal, direction = 3 -> diagonal, direction = 4 -> anti-diagonal, direction = -1 -> vertical opposite, direction = -2 -> horizontal opposite, direction = -3 -> diagonal opposite, direction = -4 -> anti-diagonal opposite
         int direction = 0;
+        // Check all the possible directions in the positions i, j on the board B for the player and sum all the cells that are occupied by the player in the same direction and return the score
         int score_vertical = 0;
         // Check the vertical direction
         for(int k = 0; k < B.X; k++){
             if(B.cellState(i+k, j) == player){
                 score_vertical++;
             }
+            else if((0 < i+k) && (i+k < B.N)){
+                break;
+            }
+            else if(B.cellState(i+k,j) != CXCellState.FREE){
+                break;
+            }
         }
+        int score_vertical_opposite = 0;
         // Check vertical direction in the opposite direction
         for(int k = 0; k < B.X; k++){
             if(B.cellState(i-k, j) == player){
-                score_vertical++;
+                score_vertical_opposite++;
+            }
+            else if((0 < i-k) && (i-k < B.N)){
+                break;
+            }
+            else if(B.cellState(i-k,j) != CXCellState.FREE){
+                break;
             }
         }
         int score_horizontal = 0;
@@ -43,11 +112,24 @@ public class GeronimoStilton implements CXPlayer {
             if(B.cellState(i, j+k) == player){
                 score_horizontal++;
             }
+            else if((0 < j+k) && (j+k < B.M)){
+                break;
+            }
+            else if(B.cellState(i,j+k) != CXCellState.FREE){
+                break;
+            }
         }
+        int score_horizontal_opposite = 0;
         // Check the horizontal direction in the opposite direction
         for(int k = 0; k < B.X; k++){
             if(B.cellState(i, j-k) == player){
-                score_horizontal++;
+                score_horizontal_opposite++;
+            }
+            else if((0 < j-k) && (j-k < B.M)){
+                break;
+            }
+            else if(B.cellState(i,j-k) != CXCellState.FREE){
+                break;
             }
         }
         int score_diagonal = 0;
@@ -56,11 +138,24 @@ public class GeronimoStilton implements CXPlayer {
             if(B.cellState(i+k, j+k) == player){
                 score_diagonal++;
             }
+            else if(((0 < i+k) && (i+k < B.N)) || ((0 < j+k) && (j+k < B.M))){
+                break;
+            }
+            else if(B.cellState(i+k,j+k) != CXCellState.FREE){
+                break;
+            }
         }
+        int score_diagonal_opposite = 0;
         // Check the diagonal direction in the opposite direction
         for(int k = 0; k < B.X; k++){
             if(B.cellState(i-k, j-k) == player){
-                score_diagonal++;
+                score_diagonal_opposite++;
+            }
+            else if(((0 < i-k) && (i-k < B.N)) || ((0 < j-k) && (j-k < B.M))){
+                break;
+            }
+            else if(B.cellState(i-k,j-k) != CXCellState.FREE){
+                break;
             }
         }
         int score_antidiagonal = 0;
@@ -69,30 +164,59 @@ public class GeronimoStilton implements CXPlayer {
             if(B.cellState(i-k, j+k) == player){
                 score_antidiagonal++;
             }
+            else if(((0 < i-k) && (i-k < B.N)) || ((0 < j+k) && (j+k < B.M))){
+                break;
+            }
+            else if(B.cellState(i-k,j+k) != CXCellState.FREE){
+                break;
+            }
         }
+        int score_antidiagonal_opposite = 0;
         // Check the anti-diagonal direction in the opposite direction
         for(int k = 0; k < B.X; k++){
             if(B.cellState(i+k, j-k) == player){
-                score_antidiagonal++;
+                score_antidiagonal_opposite++;
+            }
+            else if(((0 < i+k) && (i+k < B.N)) || ((0 < j-k) && (j-k < B.M))){
+                break;
+            }
+            else if(B.cellState(i+k,j-k) != CXCellState.FREE){
+                break;
             }
         }
 
         int max = 0;
+        if(score_antidiagonal_opposite > max){
+            max = score_antidiagonal_opposite;
+            direction = -4;
+        }
+        if(score_diagonal_opposite > max){
+            max = score_diagonal_opposite;
+            direction = -3;
+        }
+        if(score_horizontal_opposite > max){
+            max = score_horizontal_opposite;
+            direction = -2;
+        }
+        if(score_vertical_opposite > max){
+            max = score_vertical_opposite;
+            direction = -1;
+        }
         if(score_vertical > max){
             max = score_vertical;
-            direction = 0;
+            direction = 1;
         }
         if(score_horizontal > max){
             max = score_horizontal;
-            direction = 1;
+            direction = 2;
         }
         if(score_diagonal > max){
             max = score_diagonal;
-            direction = 2;
+            direction = 3;
         }
         if(score_antidiagonal > max){
             max = score_antidiagonal;
-            direction = 3;
+            direction = 4;
         }
 
         return direction;
@@ -106,11 +230,24 @@ public class GeronimoStilton implements CXPlayer {
             if(B.cellState(i+k, j) == player){
                 score_vertical++;
             }
+            else if((0 < i+k) && (i+k < B.N)){
+                break;
+            }
+            else if(B.cellState(i+k,j) != CXCellState.FREE){
+                break;
+            }
         }
+        int score_vertical_opposite = 0;
         // Check vertical direction in the opposite direction
         for(int k = 0; k < B.X; k++){
             if(B.cellState(i-k, j) == player){
-                score_vertical++;
+                score_vertical_opposite++;
+            }
+            else if((0 < i-k) && (i-k < B.N)){
+                break;
+            }
+            else if(B.cellState(i-k,j) != CXCellState.FREE){
+                break;
             }
         }
         int score_horizontal = 0;
@@ -119,11 +256,24 @@ public class GeronimoStilton implements CXPlayer {
             if(B.cellState(i, j+k) == player){
                 score_horizontal++;
             }
+            else if((0 < j+k) && (j+k < B.M)){
+                break;
+            }
+            else if(B.cellState(i,j+k) != CXCellState.FREE){
+                break;
+            }
         }
+        int score_horizontal_opposite = 0;
         // Check the horizontal direction in the opposite direction
         for(int k = 0; k < B.X; k++){
             if(B.cellState(i, j-k) == player){
-                score_horizontal++;
+                score_horizontal_opposite++;
+            }
+            else if((0 < j-k) && (j-k < B.M)){
+                break;
+            }
+            else if(B.cellState(i,j-k) != CXCellState.FREE){
+                break;
             }
         }
         int score_diagonal = 0;
@@ -132,11 +282,24 @@ public class GeronimoStilton implements CXPlayer {
             if(B.cellState(i+k, j+k) == player){
                 score_diagonal++;
             }
+            else if(((0 < i+k) && (i+k < B.N)) || ((0 < j+k) && (j+k < B.M))){
+                break;
+            }
+            else if(B.cellState(i+k,j+k) != CXCellState.FREE){
+                break;
+            }
         }
+        int score_diagonal_opposite = 0;
         // Check the diagonal direction in the opposite direction
         for(int k = 0; k < B.X; k++){
             if(B.cellState(i-k, j-k) == player){
-                score_diagonal++;
+                score_diagonal_opposite++;
+            }
+            else if(((0 < i-k) && (i-k < B.N)) || ((0 < j-k) && (j-k < B.M))){
+                break;
+            }
+            else if(B.cellState(i-k,j-k) != CXCellState.FREE){
+                break;
             }
         }
         int score_antidiagonal = 0;
@@ -145,15 +308,43 @@ public class GeronimoStilton implements CXPlayer {
             if(B.cellState(i-k, j+k) == player){
                 score_antidiagonal++;
             }
+            else if(((0 < i-k) && (i-k < B.N)) || ((0 < j+k) && (j+k < B.M))){
+                break;
+            }
+            else if(B.cellState(i-k,j+k) != CXCellState.FREE){
+                break;
+            }
         }
+        int score_antidiagonal_opposite = 0;
         // Check the anti-diagonal direction in the opposite direction
         for(int k = 0; k < B.X; k++){
             if(B.cellState(i+k, j-k) == player){
-                score_antidiagonal++;
+                score_antidiagonal_opposite++;
+            }
+            else if(((0 < i+k) && (i+k < B.N)) || ((0 < j-k) && (j-k < B.M))){
+                break;
+            }
+            else if(B.cellState(i+k,j-k) != CXCellState.FREE){
+                break;
             }
         }
         int max = 0;
-
+        if(score_antidiagonal_opposite > max){
+            max = score_antidiagonal_opposite;
+            max = -4;
+        }
+        if(score_diagonal_opposite > max){
+            max = score_diagonal_opposite;
+            max = -3;
+        }
+        if(score_horizontal_opposite > max){
+            max = score_horizontal_opposite;
+            max = -2;
+        }
+        if(score_vertical_opposite > max){
+            max = score_vertical_opposite;
+            max = -1;
+        }
         if(score_vertical > max){
             max = score_vertical;
         }
@@ -170,10 +361,20 @@ public class GeronimoStilton implements CXPlayer {
     
     }
     
+    /**
+     * Funzione che valuta lo stato della board e ritorna un intero
+     * che rappresenta quanto un determinato stato è buono.
+     * 
+     * @param B La "board" da analizzare
+     * @return the column where the player wants to play 
+     *         (dovrebbe ritornare un intero che rappresenta quanto un determinato stato è buono)
+     *         (quindi dopo verrà scelta la mossa che ritorna l'intero più alto dalla funzione che sceglie la colonna)
+     */
     int eval(CXBoard B) {
-        
+        // Prendo la board per poter usare le celle e confrontarle
         CXCellState[][] board = B.getBoard();
-        // Check if we are player 1 or player 2
+
+        // Controllo se sono il giocatore 1 o il giocatore 2
         if(B.getLastMove() == null){
                 player = CXCellState.P1;
             } else {
@@ -264,8 +465,8 @@ public class GeronimoStilton implements CXPlayer {
                             }*/
                         }
                     }
-                    int direction = checkDirection(B, best_col, best_row, player);
-                    if(direction == 0){
+                    returnCol = checkNextEmpty(B, best_col, best_row, player);
+                    /*if(direction == 0){
                         if(board[best_col][best_row-1] == CXCellState.FREE){
                             returnCol = best_col;
                         } else if(board[best_col][best_row+1] == CXCellState.FREE){
@@ -289,7 +490,7 @@ public class GeronimoStilton implements CXPlayer {
                         } else if(board[best_col+1][best_row-1] == CXCellState.FREE){
                             returnCol = best_col+1;
                         }
-                    }
+                    }*/
 
             } catch (TimeLimitExceededException e) {
                 System.out.println("Time limit exceeded");
@@ -300,10 +501,14 @@ public class GeronimoStilton implements CXPlayer {
         }   
     @Override
     public void initPlayer(int M, int N, int X, boolean first, int timeout_in_secs) {
+        /* Initialization of data */
         this.timeout_in_secs = timeout_in_secs;
         this.myWin = first ? CXGameState.WINP1 : CXGameState.WINP2;
         this.yourWin = first ? CXGameState.WINP2 : CXGameState.WINP1;
         this.rand = new Random(System.currentTimeMillis());
+
+        /* Initilization of euristics */
+        this.euristicCreator = new StartEuristicsCreator(M, N, X, first);
     }
 
 
