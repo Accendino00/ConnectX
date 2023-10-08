@@ -302,7 +302,7 @@ public class CXBoard {
 	}
 
 	// Check winning state from cell i, j
-	private boolean isWinningMove(int i, int j) {
+	public boolean isWinningMove(int i, int j) {
 		CXCellState s = B[i][j];
 		int n;
 
