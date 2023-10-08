@@ -24,7 +24,7 @@ public class GeronimoStilton implements CXPlayer {
     private StartEuristicsCreator euristicCreator;
 
    
-
+    
 
 
     private int scoregen(CXBoard B, int i, int j, CXCellState player){
@@ -37,18 +37,23 @@ public class GeronimoStilton implements CXPlayer {
         //System.out.println(j);
         //System.out.println(i);
     //   try{
-        if((0 < i+k) && (i+k < B.M)){
-            while(B.cellState(i+k, j) == player){
-            //System.out.println("Sono entrato nel primo while di scoregen");
-            score_vertical*=2;
-            k++;
-            if((0 >= i+k) || (i+k >= B.M)){
-                break;
+        if(B.M-i < B.X){ // If B.M-i is greater than B.X, then the cell in question is not useful for the score because we cant win in the vertical direction starting from it
+            if((0 < i+k) && (i+k < B.M)){
+                while(B.cellState(i+k, j) == player){
+                //System.out.println("Sono entrato nel primo while di scoregen");
+                score_vertical*=2;
+                k++;
+                if((0 >= i+k) || (i+k >= B.M)){
+                    break;
+                }
+            //   System.out.println(k);
             }
-         //   System.out.println(k);
         }
     }
-        if((0 >= i+k) || (i+k >= B.M)){
+        else{
+            score_vertical = 0;
+        }
+        if((0 >= i+k) || (i+k >= B.M)|| B.cellState(i+k,j) != CXCellState.FREE){
             score_vertical=0;
             //System.out.println("Sono entrato nell'if");
         }
@@ -59,6 +64,7 @@ public class GeronimoStilton implements CXPlayer {
         int score_horizontal = 1;
         // Check the horizontal(vertical?) direction
         k = 1;
+        if(B.N - j < B.X){
         if((0 < j+k) && (j+k < B.N)){
             //System.out.println("Sono entrato nel secondo if di scoregen");
             while(B.cellState(i, j+k) == player){
@@ -70,7 +76,11 @@ public class GeronimoStilton implements CXPlayer {
                 }
             }
         }
-        if((0 >= j+k) || (j+k >= B.N)){
+    }
+        else{
+            score_horizontal = 0;
+        }
+        if((0 >= j+k) || (j+k >= B.N)|| B.cellState(i,j+k) != CXCellState.FREE){
             score_horizontal=0;
         }
         /*else if(B.cellState(i,j+k) != CXCellState.FREE){
@@ -83,6 +93,7 @@ public class GeronimoStilton implements CXPlayer {
        // System.out.println(j);
       //  System.out.println(i);
         // Check the diagonal direction
+        if(B.N - j < B.X && B.M - i < B.X){
         if((0 < i+k) && (i+k < B.M) && ((0 < j+k) && (j+k < B.N))){
             //System.out.println("Sono entrato nel terzo if di scoregen");
             while(B.cellState(i+k, j+k) == player){
@@ -94,7 +105,11 @@ public class GeronimoStilton implements CXPlayer {
                 }
             }
         }
-        if(((0 >= i+k) || (i+k >= B.M)) || ((0 >= j+k) || (j+k >= B.N))){
+    }
+        else{
+            score_diagonal = 0;
+        }
+        if(((0 >= i+k) || (i+k >= B.M)) || ((0 >= j+k) || (j+k >= B.N)) || B.cellState(i+k,j+k) != CXCellState.FREE){
             score_diagonal=0;
         }
         /*else if(B.cellState(i+k,j+k) != CXCellState.FREE){
@@ -103,16 +118,21 @@ public class GeronimoStilton implements CXPlayer {
         k = 1;
         int score_antidiagonal = 1;
         // Check the anti-diagonal direction
+        if(B.N - j > B.X && B.M - (B.M - i) > B.X){
         if((0 < i+k) && (i+k < B.M) && ((0 <= j-k) && (j-k < B.N))){
             //System.out.println("Sono entrato nel quarto if di scoregen");
             while(B.cellState(i+k, j-k) == player){
                 //System.out.println("Sono entrato nel quarto while di scoregen");
                 score_antidiagonal*=2;
                 k++;
-                if((0 > i+k) || (i+k >= B.M) || ((0 > j-k) || (j-k >= B.N))){
+                if((0 > i+k) || (i+k >= B.M) || ((0 > j-k) || (j-k >= B.N))|| B.cellState(i+k,j-k) != CXCellState.FREE){
                     break;
                 }
             }
+        }
+    }
+        else{
+            score_antidiagonal = 0;
         }
         if(((0 > i+k) || (i+k >= B.M)) || ((0 > j-k) || (j-k >= B.N))){
             score_antidiagonal=0;
