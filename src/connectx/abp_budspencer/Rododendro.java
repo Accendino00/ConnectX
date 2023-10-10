@@ -68,15 +68,21 @@ public class Rododendro implements CXPlayer{
 
     private int minimax(CXBoard b, int depth, int alpha, int beta, boolean maximizingPlayer) {
         if (depth == 0 || !(b.gameState() == CXGameState.OPEN)) {
-            return evaluate(b);
+            System.out.println("minimaxif");
+            //return evaluate(b);
+            scorefinal(b, maximizingPlayer ? player : enemy, b.getAvailableColumns(), b.gameState());
         }
         if (maximizingPlayer) {
+            System.out.println("player di massimizzazione");
             int max = Integer.MIN_VALUE;
             for (int i = 0; i < b.N-1; i++) {
                 if (!(b.fullColumn(i))) {
                     b.markColumn(i);
+                    System.out.println("bonjour");
                     int value = minimax(b, depth - 1, alpha, beta, false);
+                    System.out.println("maximizing");
                     b.unmarkColumn();
+                    System.out.println("Sono unmarkate");
                     max = Math.max(max, value);
                     alpha = Math.max(alpha, value);
                     if (beta <= alpha) {
@@ -86,11 +92,16 @@ public class Rododendro implements CXPlayer{
             }
             return max;
         } else {
+            System.out.println("player di minimizzazione");
             int min = Integer.MAX_VALUE;
-            for (int i = 0; i < b.N-1; i++) {
+            for (int i = 0; i < b.N-1; i++) {  
                 if (!(b.fullColumn(i))) {
+                    System.out.println("sono full le colonne?");
+                    
                     b.markColumn(i);
+                    System.out.println("arrivo qui");
                     int value = minimax(b, depth - 1, alpha, beta, true);
+                    System.out.println("minimizing");
                     b.unmarkColumn();
                     min = Math.min(min, value);
                     beta = Math.min(beta, value);
@@ -105,10 +116,12 @@ public class Rododendro implements CXPlayer{
 
     //controlla dove poter mettere un pezzo
 
-    private int middleColumnScore(CXBoard b, int column){
+    private int middleColumnScore(CXBoard b, int column, CXCellState player){
         int middle = Math.floorDiv(b.N, 2);
-        if (!(b.fullColumn(middle)) && column == middle){
+        if (!(b.fullColumn(middle)) && column ==  middle && b.cellState(middle, b.getLastMove().i) == player){
             return 100;
+        } else if(!(b.fullColumn(middle)) && column ==  middle){
+            return -100;
         }
         else{
             return 0;
@@ -128,7 +141,7 @@ public class Rododendro implements CXPlayer{
 
     //controlla dove poter mettere due pezzi vicini
 
-    private int numberOfPiecesInARow(CXBoard b, int column, int row, CXCellState player){
+    private int numberOfPiecesInARow(CXBoard b, int row, CXCellState player){
         int count = 0;
         for (int i = 0; i < b.N-1; i++){
             if (b.cellState(i, row) != CXCellState.FREE && b.cellState(i, row) == player){
@@ -187,8 +200,8 @@ public class Rododendro implements CXPlayer{
     }
 
     //apply score based of number of pieces in a row
-    private int numberOfPiecesInARowScore(CXBoard b, int column, int row, CXCellState player){
-        return numberOfPiecesInARow(b, column, row, player);
+    private int numberOfPiecesInARowScore(CXBoard b, int row, CXCellState player){
+        return numberOfPiecesInARow(b, row, player);
     }
 
     //apply score based of number of pieces in a diagonal
@@ -209,34 +222,184 @@ public class Rododendro implements CXPlayer{
     //evaluate the board using the scoring functions above
     private int evaluate(CXBoard b){
         int score = 0;
-        for (int i = 0; i < b.N-1; i++){
-            for (int j = 0; j < b.M-1; j++){
-                if (b.cellState(i, j) == CXCellState.FREE){
+        System.out.println("evaluate");
+        for (int i = 0; i < b.N-1; i++) {
+            System.out.println("for");
+                if (!(b.fullColumn(i))){
+                    b.markColumn(i);
+                    System.out.println("mark");
                     if(player == CXCellState.P1){
-                        score += middleColumnScore(b, i);
-                        score += numberOfPiecesInAColumnScore(b, i, player);
-                        score += numberOfPiecesInARowScore(b, i, j, player);
-                        score += numberOfPiecesInADiagonalScore(b, i, j, player);
-                        score += numberOfPiecesInADiagonal2Score(b, i, j, player);
-                        score -= numberOfPiecesInAColumnScore(b, i, enemy);
-                        score -= numberOfPiecesInARowScore(b, i, j, enemy);
-                        score -= numberOfPiecesInADiagonalScore(b, i, j, enemy);
-                        score -= numberOfPiecesInADiagonal2Score(b, i, j, enemy);
-                    } else {
-                        score -= middleColumnScore(b, i);
-                        score -= numberOfPiecesInAColumnScore(b, i, player);
-                        score -= numberOfPiecesInARowScore(b, i, j, player);
-                        score -= numberOfPiecesInADiagonalScore(b, i, j, player);
-                        score -= numberOfPiecesInADiagonal2Score(b, i, j, player);
-                        score += numberOfPiecesInAColumnScore(b, i, enemy);
-                        score += numberOfPiecesInARowScore(b, i, j, enemy);
-                        score += numberOfPiecesInADiagonalScore(b, i, j, enemy);
-                        score += numberOfPiecesInADiagonal2Score(b, i, j, enemy);
+                        System.out.println("player 1");
+                        score += middleColumnScore(b, b.getLastMove().j, player);
+                        score += numberOfPiecesInAColumnScore(b, b.getLastMove().j, player);
+                        score += numberOfPiecesInARowScore(b, b.getLastMove().i, player);
+                        score += numberOfPiecesInADiagonalScore(b, b.getLastMove().j, b.getLastMove().i, player);
+                        score += numberOfPiecesInADiagonal2Score(b, b.getLastMove().j, b.getLastMove().i, player);
+                        score -= numberOfPiecesInAColumnScore(b, b.getLastMove().j, enemy);
+                        score -= numberOfPiecesInARowScore(b, b.getLastMove().i, enemy);
+                        score -= numberOfPiecesInADiagonalScore(b, b.getLastMove().j, b.getLastMove().i, enemy);
+                        score -= numberOfPiecesInADiagonal2Score(b, b.getLastMove().j, b.getLastMove().i, enemy);
+                    } else{
+                        System.out.println("player 2");
+                        score -= middleColumnScore(b, b.getLastMove().j, enemy);
+                        score -= numberOfPiecesInAColumnScore(b, b.getLastMove().j, player);
+                        score -= numberOfPiecesInARowScore(b, b.getLastMove().i, player);
+                        score -= numberOfPiecesInADiagonalScore(b, b.getLastMove().j, b.getLastMove().i, player);
+                        score -= numberOfPiecesInADiagonal2Score(b, b.getLastMove().j, b.getLastMove().i, player);
+                        score += numberOfPiecesInAColumnScore(b, b.getLastMove().j, enemy);
+                        score += numberOfPiecesInARowScore(b, b.getLastMove().i, enemy);
+                        score += numberOfPiecesInADiagonalScore(b, b.getLastMove().j, b.getLastMove().i, enemy);
+                        score += numberOfPiecesInADiagonal2Score(b, b.getLastMove().j, b.getLastMove().i, enemy);
                     }
+                    b.unmarkColumn();
+                }
+        }
+        return score;
+    }
+
+
+    private int scoregen(CXBoard B, int i, int j, CXCellState player){
+        // Check all the possible directions in the positions i, j on the board B for the player and sum all the cells that are occupied by the player in the same direction and return the score
+        int score_vertical = 1;
+        int k = 1;
+        if(B.M-i < B.X){ // If B.M-i is greater than B.X, then the cell in question is not useful for the score because we cant win in the vertical direction starting from it
+            if((0 < i+k) && (i+k < B.M)){
+                while(B.cellState(i+k, j) == player){
+                //System.out.println("Sono entrato nel primo while di scoregen");
+                score_vertical*=2;
+                k++;
+                if((0 >= i+k) || (i+k >= B.M)){
+                    break;
+                }
+            //   System.out.println(k);
+            }
+        }
+    }
+        else{
+            score_vertical = 0;
+        }
+        if((0 >= i+k) || (i+k >= B.M)|| B.cellState(i+k,j) != CXCellState.FREE){
+            score_vertical=0;
+            //System.out.println("Sono entrato nell'if");
+        }
+        int score_horizontal = 1;
+        // Check the horizontal(vertical?) direction
+        k = 1;
+        if(B.N - j < B.X){
+        if((0 < j+k) && (j+k < B.N)){
+            //System.out.println("Sono entrato nel secondo if di scoregen");
+            while(B.cellState(i, j+k) == player){
+                //System.out.println("Sono entrato nel secondo while di scoregen");
+                score_horizontal*=2;
+                k++;
+                if((0 >= j+k) || (j+k >= B.N)){
+                    break;
                 }
             }
         }
-        return score;
+    }
+        else{
+            score_horizontal = 0;
+        }
+        if((0 >= j+k) || (j+k >= B.N)|| B.cellState(i,j+k) != CXCellState.FREE){
+            score_horizontal=0;
+        }
+        k = 1;
+        int score_diagonal = 1;
+        if(B.N - j < B.X && B.M - i < B.X){
+        if((0 < i+k) && (i+k < B.M) && ((0 < j+k) && (j+k < B.N))){
+            //System.out.println("Sono entrato nel terzo if di scoregen");
+            while(B.cellState(i+k, j+k) == player){
+                //System.out.println("Sono entrato nel terzo while di scoregen");
+                score_diagonal*=2;
+                k++;
+                if((0 >= i+k) || (i+k >= B.M) || ((0 >= j+k) || (j+k >= B.N))){
+                    break;
+                }
+            }
+        }
+    }
+        else{
+            score_diagonal = 0;
+        }
+        if(((0 >= i+k) || (i+k >= B.M)) || ((0 >= j+k) || (j+k >= B.N)) || B.cellState(i+k,j+k) != CXCellState.FREE){
+            score_diagonal=0;
+        }
+        k = 1;
+        int score_antidiagonal = 1;
+        if(B.N - j > B.X && B.M - (B.M - i) > B.X){
+        if((0 < i+k) && (i+k < B.M) && ((0 <= j-k) && (j-k < B.N))){
+            //System.out.println("Sono entrato nel quarto if di scoregen");
+            while(B.cellState(i+k, j-k) == player){
+                //System.out.println("Sono entrato nel quarto while di scoregen");
+                score_antidiagonal*=2;
+                k++;
+                if((0 > i+k) || (i+k >= B.M) || ((0 > j-k) || (j-k >= B.N))|| B.cellState(i+k,j-k) != CXCellState.FREE){
+                    break;
+                }
+            }
+        }
+    }
+        else{
+            score_antidiagonal = 0;
+        }
+        if(((0 > i+k) || (i+k >= B.M)) || ((0 > j-k) || (j-k >= B.N))){
+            score_antidiagonal=0;
+
+        }
+        return score_antidiagonal + score_diagonal + score_horizontal + score_vertical;
+    }
+
+    // Make a general score function
+    private int scorefinal(CXBoard B, CXCellState player, Integer[] ava, CXGameState state){
+        System.out.println("scorefinal");
+        int score = 0;
+        CXCellState enemy_player = CXCellState.FREE;
+        int player_score = 0;
+        int enemy_score = 0;
+            if(player == CXCellState.P1){
+                enemy_player = CXCellState.P2;
+            }
+            else if(player == CXCellState.P2){
+                enemy_player = CXCellState.P1;
+            }
+             if(state == myWin){
+                return score = 2147483646;
+             }
+            int j;
+            boolean stop;
+           /* for (j = 0, stop = false; j < ava.length-1 && !stop; j++) {
+                System.out.println("scorefinal_forloop");
+                if (!B.fullColumn(ava[j])) {
+                    System.out.println("scorefinal_if_inutile");
+                    CXGameState state2 = B.markColumn(ava[j]);
+                    System.out.println("crasho qua");
+                    if (state2 == yourWin) {
+                        System.out.println("scorefinal_if_yourwin");
+                        stop = true; // We don't need to check more
+                        enemy_score = 2147483646;
+                    }
+                    System.out.println("anzi crasho qua");
+                    B.unmarkColumn(); 
+                    System.out.println("after mark column");
+                }
+            }
+            */
+            System.out.println("ciao");
+            CXCell cells[] = B.getMarkedCells();
+            int limit = cells.length - 1;
+            for(int i = limit; i > 0; i--){
+                System.out.println("scorefinal actual for loop");
+                if(cells[i].state == player){
+                    System.out.println("cells if");
+                    player_score += scoregen(B, cells[i].i, cells[i].j, player);
+                }
+                else if(cells[i].state == enemy_player){
+                    enemy_score += scoregen(B, cells[i].i, cells[i].j, enemy_player);
+                }
+            }
+            score = player_score - enemy_score;
+            return score;
     }
 }
 
