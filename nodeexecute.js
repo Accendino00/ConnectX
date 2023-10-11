@@ -40,7 +40,12 @@ function executeJavaCommand(className, args) {
 
 async function main() {
   try {
-     let additionalArgs = ` connectx.euristics_budspencer.GeronimoStilton connectx.L1.L1`;
+     //let additionalArgs = ` connectx.euristics_budspencer.BeatriceDiDante connectx.L1.L1`;
+     let additionalArgs = ` connectx.abp_budspencer.Rododendro connectx.euristics_budspencer.BeatriceDiDante`;
+     // let additionalArgs = ` connectx.euristics_budspencer.BeatriceDiDante connectx.abp_budspencer.Rododendro`;
+     //let additionalArgs = ` connectx.L1.L1 connectx.euristics_budspencer.BeatriceDiDante`;
+      // let additionalArgs = ` connectx.euristics_budspencer.GeronimoStilton connectx.euristics_budspencer.BeatriceDiDante`;
+     // let additionalArgs = ` connectx.euristics_budspencer.BeatriceDiDante connectx.euristics_budspencer.GeronimoStilton`;
     //let additionalArgs = ` connectx.L1.L1 connectx.negamax_budspencer.BudSpencer`;
     // let additionalArgs = ` connectx.negamaxr_budspencer.BudSpencer connectx.negamax_budspencer.BudSpencer`;
     // let additionalArgs = ` connectx.negamax_budspencer.BudSpencer connectx.negamaxr_budspencer.BudSpencer`;

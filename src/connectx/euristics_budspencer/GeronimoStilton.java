@@ -14,7 +14,7 @@ import javax.naming.TimeLimitExceededException;
 import connectx.euristics.StartEuristicsCreator;
 
 public class GeronimoStilton implements CXPlayer {
-    private CXCellState player;
+    private CXCellState playerTileType;
     private int timeout_in_secs;
     private long START_TIME;
     private Random rand; 
@@ -154,50 +154,51 @@ public class GeronimoStilton implements CXPlayer {
     // Make a general score function
     private int scorefinal(CXBoard B, CXCellState player, Integer[] ava, CXGameState state){
         int score = 0;
-        CXCellState enemy_player = player;
+        CXCellState enemy_player = player == CXCellState.P1 ? CXCellState.P2 : CXCellState.P1;
         int player_score = 0;
         int enemy_score = 0;
+
+
      //   System.out.println("sono entrato in scorefinal");
         //try{
-            if(player == CXCellState.P1){
-                enemy_player = CXCellState.P2;
-            }
-            else if(player == CXCellState.P2){
-                enemy_player = CXCellState.P1;
-            }
-
             //CXCell lastmove = B.getLastMove();
             //    if (B.isWinningMove(lastmove.i, lastmove.j)) {
              //       return score = 2147483646;
              //   }
              
              if(state == myWin){
-                return score = 2147483646;
+                return score = Integer.MAX_VALUE;
              }
-        //    System.out.println("sono entrato nel try di scorefinal");
+             
+
+            /*
+                Questa funzione dovrebbe venire usata al di fuori dell'EVAL,
+                in quanto sta valutando due mosse in avanti e non da un resoconto della situazione attuale
+                della board, ovvero il ruolo che ha questa funzione (EVAL)
+
+                Da mantenere comunque perché utile, però esterno all'EVAL
+            
             int j;
             boolean stop;
             for (j = 0, stop = false; j < ava.length && !stop; j++) {
-               // checkTime();
+               
                 if (!B.fullColumn(ava[j])) {
                     CXGameState state2 = B.markColumn(ava[j]);
-          //          System.out.println("sono entrato nella funzione di blocco vittoria");
                     if (state2 == yourWin) {
-          //              System.out.println("sono entrato in yourwin");
-                        stop = true; // We don't need to check more
-                        enemy_score = 2147483646;
+                        stop = true; // We don't need to check more since we found a move we need to block
+                        enemy_score = Integer.MAX_VALUE;
                     }
-                    B.unmarkColumn(); //
+                    B.unmarkColumn();
                 }
-            }
-       //     System.out.println("sono uscito da blocco vittoria");
+            } 
+            */
+
+
             CXCell cells[] = B.getMarkedCells();
             int limit = cells.length - 1;
-       //     System.out.println("sono uscito da blocco vittoria parte 2");
-       //     System.out.println(limit);
 
+            // Il loop parte al contrario in quanto le mosse più utili da controllare saranno le ultime
             for(int i = limit; i > 0; i--){
-        //        System.out.println("sono entrato nel forloop di scorefinal");
                 if(cells[i].state == player){
                     player_score += scoregen(B, cells[i].i, cells[i].j, player);
                 }
@@ -205,6 +206,10 @@ public class GeronimoStilton implements CXPlayer {
                     enemy_score += scoregen(B, cells[i].i, cells[i].j, enemy_player);
                 }
             }
+
+
+
+
      //       System.out.println("sono uscito dal forloop e ritorno lo score");
             score = player_score - enemy_score;
       //      System.out.println(score);
@@ -246,7 +251,7 @@ public class GeronimoStilton implements CXPlayer {
         this.myWin = first ? CXGameState.WINP1 : CXGameState.WINP2;
         this.yourWin = first ? CXGameState.WINP2 : CXGameState.WINP1;
         this.rand = new Random(System.currentTimeMillis());
-        this.player = first ? CXCellState.P1 : CXCellState.P2;
+        this.playerTileType = first ? CXCellState.P1 : CXCellState.P2;
         /* Initilization of euristics */
         this.euristicCreator = new StartEuristicsCreator(M, N, X, first);
     }
@@ -275,13 +280,13 @@ public class GeronimoStilton implements CXPlayer {
         
 
       //  try {
+          int max_score = 0;
             for(Integer i : ava) {
       //          System.out.println("arrivo fin qua?");
        //         System.out.println("arrivo fin qua parte 2?");
                 CXGameState state = B.markColumn(i);
-                int max_score = 0;
        //         System.out.println("arrivo fin qua parte 3?");
-                int scorefinal = scorefinal(B, player, ava, state);
+                int scorefinal = scorefinal(B, playerTileType, ava, state);
       //          System.out.println("what about qua");
                 if(max_score < scorefinal){
                     max_score = scorefinal;

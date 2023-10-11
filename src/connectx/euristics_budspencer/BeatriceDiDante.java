@@ -1,51 +1,43 @@
-package connectx.abp_budspencer;
-
-import connectx.euristics_budspencer.BeatriceDiDante;
-
-import javax.naming.TimeLimitExceededException;
+package connectx.euristics_budspencer;
 
 import connectx.CXBoard;
 import connectx.CXCell;
-import connectx.CXCellState;
 import connectx.CXPlayer;
 import connectx.CXGameState;
+import connectx.CXCellState;
+
+import java.io.IOError;
+import java.io.IOException;
+import java.io.PrintWriter;
+import java.io.StringWriter;
+import java.nio.file.Files;
+import java.nio.file.Paths;
+import java.util.Random;
+import javax.naming.TimeLimitExceededException;
 
 import connectx.euristics.StartEuristicsCreator;
 
-public class Rododendro implements CXPlayer{
-
-    private int M, N, X;
+public class BeatriceDiDante implements CXPlayer {
+    
+    // Number of rows
+    private int M;  
+    // Number of columns
+    private int N;  
+    // Number of adjacent tiles to win
+    private int X;  
+    
+    private CXCellState playerTileType;
+    private int timeout_in_secs;
+    private long START_TIME;
+    private Random rand; 
     private CXGameState myWin;
     private CXGameState yourWin;
-    private long timeout_in_ms;
-    private long START_TIME;
-    private boolean maximizingPlayer;
-    private CXCellState player;
-    private CXCellState enemy;
 
+    private StartEuristicsCreator euristicCreator;
 
-    private StartEuristicsCreator euristicsCreator;
-
-
-    @Override
-    public void initPlayer(int M, int N, int X, boolean first, int timeout_in_secs) {
-        this.M = M;
-        this.N = N;
-        this.X = X;
-        //this.myWin = first ? CXGameState.WINP1 : CXGameState.WINP2;
-        //this.yourWin = first ? CXGameState.WINP2 : CXGameState.WINP1;
-        this.timeout_in_ms = timeout_in_secs * 1000;
-        this.maximizingPlayer = first ? true : false;
-        this.player = first ? CXCellState.P1 : CXCellState.P2;
-        this.enemy = first ? CXCellState.P2 : CXCellState.P1;
-
-        /* Inizializzo l'euristica */
-        euristicsCreator = new StartEuristicsCreator(N, M, X, first);
-    }
-
-    @Override
-    public String playerName() {
-        return "Rododendro";
+    public BeatriceDiDante() {
+        // Initialize data
+        this.rand = new Random(System.currentTimeMillis());
     }
 
     // Make a general score function
@@ -179,58 +171,104 @@ public class Rododendro implements CXPlayer{
         return playerScore - enemyScore;
     }
 
+    @Override
+    public void initPlayer(int M, int N, int X, boolean first, int timeout_in_secs) {
+        /* Initialization of data */
+        this.timeout_in_secs = timeout_in_secs;
+        this.myWin = first ? CXGameState.WINP1 : CXGameState.WINP2;
+        this.yourWin = first ? CXGameState.WINP2 : CXGameState.WINP1;
+        this.rand = new Random(System.currentTimeMillis());
+
+        // M, N, X values
+        this.M = M;
+        this.N = N;
+        this.X = X;
+
+        /* Initilization of euristics */
+        this.euristicCreator = new StartEuristicsCreator(M, N, X, first);
+    }
+
+
+    private void checkTime() throws TimeLimitExceededException {
+        if (System.currentTimeMillis() - START_TIME > timeout_in_secs * 1000 - 100) {
+            throw new TimeLimitExceededException();
+        }
+    }
+
 
     @Override
-    public int selectColumn(CXBoard b) {
-        int maxValue = Integer.MIN_VALUE;
-        int returnCol = b.getAvailableColumns()[0];
-        for (Integer i : b.getAvailableColumns()) {
-            b.markColumn(i);
-            int value = alphaBeta(b, 10, Integer.MIN_VALUE, Integer.MAX_VALUE, true);
-            b.unmarkColumn();
-            if (value > maxValue) {
-                maxValue = value;
-                returnCol = i;
-            }
-        }
-        return returnCol;
+    public int selectColumn(CXBoard B) {
+        // Impostiamo il tempo iniziale
+        START_TIME = System.currentTimeMillis();
         
+        // Se è il primo turno, giochiamo al centro
+        if(B.getLastMove() == null || B.numOfMarkedCells() == 1){
+            return B.N/2;
+        }
+
+        // Selezioniamo per prima una colonna a caso
+        Integer ava[] = B.getAvailableColumns();
+        int returnCol = ava[rand.nextInt(ava.length)];
+        
+        // We print the gameboard in ascii mode
+        // We get the cells, for each row we print colored "O" which are LIGHTBLUE if they are the player and RED if they are the enemy
+        // The colors are made using \033[96m and \033[91m for LIGHTBLUE and RED respectively. We also set the background to
+        // the same colors, using \033[106m and \033[101m for LIGHTBLUE and RED respectively.
+        
+       /*  CXCellState cells [][] = B.getBoard();
+        String output = "Gameboard:\n";
+        for(int i = 0; i < this.M; i++){
+            for(int j = 0; j < this.N; j++){
+                if(cells[i][j] == CXCellState.FREE){
+                    output += "\033[30m\033[40m  \033[0m";
+                }
+                else if(cells[i][j] == CXCellState.P1){
+                    output += "\033[106m\033[96m  \033[0m";
+                }
+                else{
+                    output += "\033[101m\033[91m  \033[0m";
+                }
+            }
+            output += "\n";
+        }
+
+        System.out.println(output);
+*/
+
+        try {
+            int maxScore = 0;
+            for(Integer i : ava) {
+                // Controlliamo il tempo
+                checkTime();
+
+                // Impostiamo le variabili per l'eval
+                CXGameState gameStateAfterMove = B.markColumn(i);
+                playerTileType = B.getLastMove().state;
+
+                int currentMoveScore = eval(B, playerTileType, ava, gameStateAfterMove);
+                
+                // Se la nuova mossa è migliore della migliore trovata fin'ora, viene segnata come migliore
+                if (maxScore < currentMoveScore) {
+                    maxScore = currentMoveScore;
+                    returnCol = i;
+
+                    // Print the updated move:
+                    System.out.println("New best move: " + returnCol + " with score: " + maxScore);
+                }
+                B.unmarkColumn();
+            } 
+        } catch (TimeLimitExceededException e) {
+            // Abbiamo superato il limite di tempo, quindi ritorniamo la returnCol;
+            return returnCol;
+        }
+
+        return returnCol;
     }
 
-    private int alphaBeta(CXBoard b, int depth, int alpha, int beta, boolean maximizingPlayer) {
-        int value;
-        if (depth == 0 || !(b.gameState() == CXGameState.OPEN)) {
-            int score = eval(b, maximizingPlayer ? player : enemy, b.getAvailableColumns(), b.gameState());
-            return maximizingPlayer ? score : -score;
-        }
-        if (maximizingPlayer) {
-            value = Integer.MIN_VALUE;
-            // For each child of node
-            for (Integer i : b.getAvailableColumns()) {
-                b.markColumn(i);
-                value = Math.max(value, alphaBeta(b, depth - 1, alpha, beta, false));
-                b.unmarkColumn();
-                alpha = Math.max(alpha, value);
-                if (value >= beta) {
-                    break;
-                }
-            }
-            return value;
-        } else {
-            value = Integer.MAX_VALUE;
-            for (Integer i : b.getAvailableColumns()) {
-                b.markColumn(i);
-                value = Math.min(value, alphaBeta(b, depth - 1, alpha, beta, true));
-                b.unmarkColumn();
-                beta = Math.min(beta, value);
-                if (value <= alpha) {
-                    break;
-                }
-            }
-            return value;
-        }
+    @Override
+    public String playerName() {
+        return "BeatriceDiDante";
     }
+    
+
 }
-
-
-
