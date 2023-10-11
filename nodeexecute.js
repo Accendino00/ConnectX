@@ -12,6 +12,7 @@ const M = process.argv[2];
 const N = process.argv[3];
 const K = process.argv[4];
 const useCXGame = process.argv.includes('-v');
+const inversePlayer = process.argv.includes('-i');
 const repeatTimesIndex = process.argv.indexOf('-r');
 const repeatTimes = repeatTimesIndex !== -1 ? process.argv[repeatTimesIndex + 1] : null;
 
@@ -41,7 +42,8 @@ function executeJavaCommand(className, args) {
 async function main() {
   try {
      //let additionalArgs = ` connectx.euristics_budspencer.BeatriceDiDante connectx.L1.L1`;
-     let additionalArgs = ` connectx.abp_budspencer.Rododendro connectx.euristics_budspencer.BeatriceDiDante`;
+     // let additionalArgs = ` connectx.abp_budspencer.Rododendro connectx.sfidanti.Rebarbaro`;
+     let additionalArgs = ` connectx.MxLxPlayer.MxLxPlayer connectx.abp_budspencer.Rododendro`;
      // let additionalArgs = ` connectx.euristics_budspencer.BeatriceDiDante connectx.abp_budspencer.Rododendro`;
      //let additionalArgs = ` connectx.L1.L1 connectx.euristics_budspencer.BeatriceDiDante`;
       // let additionalArgs = ` connectx.euristics_budspencer.GeronimoStilton connectx.euristics_budspencer.BeatriceDiDante`;
@@ -50,6 +52,11 @@ async function main() {
     // let additionalArgs = ` connectx.negamaxr_budspencer.BudSpencer connectx.negamax_budspencer.BudSpencer`;
     // let additionalArgs = ` connectx.negamax_budspencer.BudSpencer connectx.negamaxr_budspencer.BudSpencer`;
     
+    if(inversePlayer) {
+      // Invert the two players separated by space in the additionalArgs string
+      const players = additionalArgs.split(' ');
+      additionalArgs = ` ${players[2]} ${players[1]}`;
+    }
     
     if (repeatTimes !== null) {
       additionalArgs += ` -r ${repeatTimes}`;
