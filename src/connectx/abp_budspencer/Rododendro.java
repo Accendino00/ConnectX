@@ -38,6 +38,7 @@ public class Rododendro implements CXPlayer{
         this.maximizingPlayer = first ? true : false;
         this.player = first ? CXCellState.P1 : CXCellState.P2;
         this.enemy = first ? CXCellState.P2 : CXCellState.P1;
+        this.START_TIME = System.currentTimeMillis();
 
         /* Inizializzo l'euristica */
         euristicsCreator = new StartEuristicsCreator(N, M, X, first);
@@ -182,26 +183,16 @@ public class Rododendro implements CXPlayer{
 
     @Override
     public int selectColumn(CXBoard b) {
-        int maxValue = Integer.MIN_VALUE;
-        int returnCol = b.getAvailableColumns()[0];
-        for (Integer i : b.getAvailableColumns()) {
-            b.markColumn(i);
-            int value = alphaBeta(b, 10, Integer.MIN_VALUE, Integer.MAX_VALUE, true);
-            b.unmarkColumn();
-            if (value > maxValue) {
-                maxValue = value;
-                returnCol = i;
-            }
-        }
-        return returnCol;
+        return iterativeDeepening(b, 20, Integer.MIN_VALUE, Integer.MAX_VALUE, true);
         
     }
+
 
     private int alphaBeta(CXBoard b, int depth, int alpha, int beta, boolean maximizingPlayer) {
         int value;
         if (depth == 0 || !(b.gameState() == CXGameState.OPEN)) {
             int score = eval(b, maximizingPlayer ? player : enemy, b.getAvailableColumns(), b.gameState());
-            return maximizingPlayer ? score : -score;
+            return maximizingPlayer ? score : score;
         }
         if (maximizingPlayer) {
             value = Integer.MIN_VALUE;
@@ -229,6 +220,29 @@ public class Rododendro implements CXPlayer{
             }
             return value;
         }
+    }
+
+    private Integer iterativeDeepening(CXBoard b, int maxDepth, int alpha, int beta, boolean maximizingPlayer) {
+        int maxValue = Integer.MIN_VALUE;
+        int returnColumn = b.getAvailableColumns()[0];
+        int value = 0;
+        int depth = 1;
+        while (depth <= maxDepth) {
+            for (Integer i : b.getAvailableColumns()) {
+                b.markColumn(i);
+                if(System.currentTimeMillis() - START_TIME > timeout_in_ms){
+                    return value;
+                }
+                value = alphaBeta(b, depth, alpha, beta, maximizingPlayer);
+                depth++;
+                b.unmarkColumn();
+                if (value > maxValue) {
+                    maxValue = value;
+                    returnColumn = i;
+                }
+            }
+        }
+        return returnColumn;
     }
 }
 
