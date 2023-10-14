@@ -228,7 +228,7 @@ public class Rododendro implements CXPlayer{
         int value;
         if (depth == 0 || !(b.gameState() == CXGameState.OPEN)) {
             int score = eval(b, maximizingPlayer ? player : enemy, b.getAvailableColumns(), b.gameState());
-            return maximizingPlayer ? score : score;
+            return score;
         }
         if (maximizingPlayer) {
             value = Integer.MIN_VALUE;
