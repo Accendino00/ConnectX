@@ -42,6 +42,86 @@ public class HogRider implements CXPlayer {
         this.rand = new Random(System.currentTimeMillis());
     }
 
+    // Creo una funzione generale per controllare se ho una possibile doppia vittoria ( B-X-1 celle in fila )
+    // con uno switch per capire se è orizzontale, diagonale o diagonale inversa
+    // non necessito di controllare la direzione verticale dato che non è possibile avere una doppia vittoria in verticale
+
+    private int isDoubleVictory(CXBoard B, CXCellState cells[][], CXCellState currentPlayer, int j, int i,  int direction){
+        // Variabili sulle quali si eseguono i controlli, che ci indicano l'indice
+        // della prima e dell'ultima colonna della cella da vedere
+        int colonnaPrima, colonnaUltima;
+        
+        // Prima controlliamo da che lato c'è l'ultimo elemento, controllando se la prima è una cella del player
+        // il controllo è uguale per tutti e 3 i casi in quanto lavoriamo con le colonne
+        if (cells[j][i] == currentPlayer) {
+            colonnaPrima = i - 1;
+            colonnaUltima = i + B.X - 1; 
+        }    
+        else {
+            colonnaPrima = i;
+            colonnaUltima = i + B.X;
+        }
+        // Controlliamo se le colonne da controllare superano i limite della board
+        if (colonnaPrima >= 0 && colonnaUltima < B.N) {
+            switch(direction){
+                // Caso orizzontale
+                case 1:
+                // Controlliamo se le celle delle colonne da controllare sono vuote
+                if (cells[j][colonnaPrima] == CXCellState.FREE && cells[j][colonnaUltima] == CXCellState.FREE) {
+                    // Controlliamo se siamo a riga 0 oppure se sotto le celle vuote c'è una cella occupata
+                    if(j == this.M-1) // Siamo a riga 0, cioe M-1 poiche la tabella è stampata al contrario
+                        return DOUBLEVICTORY;
+                    if(j-1 >= 0){ // Controllo di non avere un accesso fuori dalla matrice
+                        if(((cells[j - 1][colonnaPrima] != CXCellState.FREE) && (cells[j - 1][colonnaUltima] != CXCellState.FREE))){
+                            return DOUBLEVICTORY;
+                        }
+                    } else {
+                        return this.N * 5; // Comunque un caso positivo, ma non tanto quanto DOUBLEVICTORY
+                    }
+                }
+                break;
+
+                // Caso diagonale
+                case 2:
+                // Controlliamo se le celle delle colonne da controllare sono vuote, se sono a riga 0 allora j-1 non
+                // è una cella valida quindi aggiungo un controllo per sicurezza
+                if(j-1 >= 0 && j+1 < B.M){
+                    if (cells[j-1][colonnaPrima] == CXCellState.FREE && cells[j+1][colonnaUltima] == CXCellState.FREE) {
+                        // Non ho bisogno di controllare se sono a riga 0, in quanto se sono a riga 0, allora j-1 non è una cella valida
+                        if(j-2>=0){ // Controllo di non avere un accesso fuori dalla matrice
+                            if(((cells[j - 2][colonnaPrima] != CXCellState.FREE) && (cells[j][colonnaUltima] != CXCellState.FREE))){
+                                return DOUBLEVICTORY;
+                            }
+                        }
+                        else {
+                            return this.N * 5; // Comunque un caso positivo, ma non tanto quanto DOUBLEVICTORY
+                        }
+                    }
+                }
+                break;
+
+                // Caso diagonale inversa
+                case 3:
+                // Controlliamo se le celle delle colonne da controllare sono vuote, se sono a riga 0 allora j-1 non
+                // è una cella valida quindi aggiungo un controllo per sicurezza
+                if(j-1 >= 0 && j+1 < B.M){
+                    if (cells[j+1][colonnaPrima] == CXCellState.FREE && cells[j-1][colonnaUltima] == CXCellState.FREE) {
+                        // Non ho bisogno di controllare se sono a riga 0, in quanto se sono a riga 0, allora j-1 non è una cella valida
+                        if(j-2>=0){ // Controllo di non avere un accesso fuori dalla matrice
+                            if(((cells[j - 2][colonnaUltima] != CXCellState.FREE) && (cells[j][colonnaPrima] != CXCellState.FREE))){
+                                return DOUBLEVICTORY;
+                            }
+                        }
+                        else {
+                            return this.N * 5; // Comunque un caso positivo, ma non tanto quanto DOUBLEVICTORY
+                        }
+                    }
+                }
+            }
+        }
+        return 0;
+    }
+
     // Make a general score function
     private int eval(CXBoard B, CXCellState currentPlayer, Integer[] ava, CXGameState state){
         CXCellState enemyPlayer = currentPlayer == CXCellState.P1 ? CXCellState.P2 : CXCellState.P1;
@@ -91,12 +171,12 @@ public class HogRider implements CXPlayer {
         boolean impossibleCellDiagonalInverse = false;
 
 
-        // Contiamo la quantità di sottoinsiemi di X celle consecutive (del giocatore [almeno 1] o vuote)
+        // Contiamo la quantita di sottoinsiemi di X celle consecutive (del giocatore [almeno 1] o vuote)
         // Per ogni cella noi andiamo a vedere in un ciclo fino a X se ci sono X celle consecutive che sono
         // del giocatore o vuote (con almeno una del player), all'interno della riga, colonna o diagonale
-        // Verrà dato un punteggio in base al numero di celle del player trovate in quel sottoinsieme.
+        // Verra dato un punteggio in base al numero di celle del player trovate in quel sottoinsieme.
         //
-        // (Complessità : X*N*M)
+        // (Complessita : X*N*M)
 
         for (j = 0; j < this.M; j++) {      // Per ogni riga
             for (i = 0; i < this.N; i++) {  // Per ogni colonna
@@ -145,52 +225,26 @@ public class HogRider implements CXPlayer {
                             playerCellHorizontal++;
                         }
 
-                        /*
-                         * # TODO
-                         * Trasformare questa parte sottostante in una funzione
-                         * Da capire quali parametri passare e quali calcolare qua.
-                         * 
-                         * Questo perché per replicarlo per il verticale, la diagonale e la diagonale inversa, ci potrebbe essere molto codice in comune
-                         */
-
                         // Se abbiamo contato X-1 diverse celle del player 
                         //      (non vediamo se ne contiamo X in quanto questo controllo viene fatto precedentemente dalla 
-                        //       condizione del gioco, la quale sarà player win nel caso ce ne fossero 4 in fila)
+                        //       condizione del gioco, la quale sara player win nel caso ce ne fossero 4 in fila)
                         // E queste celle sono messe di fila (pertanto non vi sono spazi vuoti -> viene controllato vedendo se la prima o l'ultima cella sono vuote)
                         // Se queste celle sono in fila, allora dobbiamo controllare se prima E dopo queste celle c'è uno spazio vuoto
                         //    - Impostiamo il ritorno a 50000
                         // Se inoltre lo spazio sotto agli spazi vuoti è occupato oppure se siamo alla prima riga
                         //    - Impostiamo il ritorno a 100000
 
+                        // Se abbiamo trovato X-1 celle del nemico e non ci sono celle del player
+                        if (enemyCellHorizontal == (B.X - 1) && playerCellHorizontal == 0) {
+                            // chiamo la funzione isDoubleVictory per controllare se c'è una possibile doppia vittoria
+                            // con direzione 1 cioe orizzontale, ci sono anche direzione 2 e 3 per le diagonali
+                            enemyCellHorizontal += (isDoubleVictory(B, cells, enemyPlayer, j, i, 1))*3; // dato che è una mossa difensiva, la moltiplico per 3 per darle più importanza
+                        }    
                         // Se abbiamo trovato X-1 celle del player e non ci sono celle del nemico
                         if (playerCellHorizontal == (B.X - 1) && enemyCellHorizontal == 0) {
-                            // Variabili sulle quali si eseguono i controlli, che ci indicano l'indice
-                            // della prima e dell'ultima colonna della cella da vedere
-                            int colonnaPrima, colonnaUltima;
-                            
-                            // Prima controlliamo da che lato c'è l'ultimo elemento, controllando se la prima è una cella del player
-                            if (cells[j][i] == currentPlayer) {
-                                colonnaPrima = i - 1;
-                                colonnaUltima = i + B.X - 1; 
-                            }    
-                            else {
-                                colonnaPrima = i;
-                                colonnaUltima = i + B.X;
-                            }
-
-                            // Controlliamo se le colonne da controllare superano i limite della board
-                            if (colonnaPrima >= 0 && colonnaUltima < B.N) {
-                                // Controlliamo se le celle delle colonne da controllare sono vuote
-                                if (cells[j][colonnaPrima] == CXCellState.FREE && cells[j][colonnaUltima] == CXCellState.FREE) {
-                                    // Controlliamo se siamo a riga 0 oppure se sotto le celle vuote c'è una cella occupata
-                                    if ((j == this.M - 1) || // Siamo a riga 0 
-                                        ((cells[j - 1][colonnaPrima] != CXCellState.FREE) && (cells[j - 1][colonnaUltima] != CXCellState.FREE))) {
-                                        playerCellHorizontal += DOUBLEVICTORY;
-                                    } else {
-                                        playerCellHorizontal += this.N * 5; // Comunque un caso positivo, ma non tanto quanto DOUBLEVICTORY
-                                    }
-                                }
-                            }
+                            // chiamo la funzione isDoubleVictory per controllare se c'è una possibile doppia vittoria
+                            // con direzione 1 cioe orizzontale
+                            playerCellHorizontal += isDoubleVictory(B, cells, currentPlayer, j, i, 1);
                         }    
                     }
 
@@ -212,6 +266,12 @@ public class HogRider implements CXPlayer {
                         else if(cells[j + k][i + k] == currentPlayer){
                             playerCellDiagonal++;
                         }
+                        if(enemyCellDiagonal == (B.X - 1) && playerCellDiagonal == 0){
+                            enemyCellDiagonal += (isDoubleVictory(B, cells, enemyPlayer, j, i, 2))*3;
+                        }
+                        if (playerCellDiagonal == (B.X - 1) && enemyCellDiagonal == 0) {
+                            playerCellDiagonal += isDoubleVictory(B, cells, currentPlayer, j, i, 2);
+                        }   
                     }
 
                     // Controllo per le diagonali inverse
@@ -222,6 +282,12 @@ public class HogRider implements CXPlayer {
                         else if(cells[j - k][i + k] == currentPlayer){
                             playerCellDiagonalInverse++;
                         }
+                        if(enemyCellDiagonalInverse == (B.X - 1) && playerCellDiagonalInverse == 0){
+                            enemyCellDiagonalInverse += (isDoubleVictory(B, cells, enemyPlayer, j, i, 3))*3;
+                        }
+                        if (playerCellDiagonalInverse == (B.X - 1) && enemyCellDiagonalInverse == 0) {
+                            playerCellDiagonalInverse += isDoubleVictory(B, cells, currentPlayer, j, i, 3);
+                        }  
                     }
                 }
 
