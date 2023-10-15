@@ -2,8 +2,6 @@ package connectx.abp_budspencer;
 
 import connectx.euristics_budspencer.BeatriceDiDante;
 
-import java.util.concurrent.TimeoutException;
-
 import javax.naming.TimeLimitExceededException;
 
 import connectx.CXBoard;
@@ -21,11 +19,9 @@ public class Rododendro implements CXPlayer{
     private CXGameState yourWin;
     private long timeout_in_ms;
     private long START_TIME;
+    private boolean maximizingPlayer;
     private CXCellState player;
     private CXCellState enemy;
-    private long tempoPerGiro;
-
-    private double columnValueMultiplier [];
 
 
     private StartEuristicsCreator euristicsCreator;
@@ -33,70 +29,18 @@ public class Rododendro implements CXPlayer{
 
     @Override
     public void initPlayer(int M, int N, int X, boolean first, int timeout_in_secs) {
-        /* Inizializzando i dati del gioco */
-        this.M = M;  // Numero righe
-        this.N = N;  // Numero colonne
-        this.X = X;  // Numero di cose da mettere in fila per vincere
-        this.timeout_in_ms = timeout_in_secs * 1000;
-
-        /* Altri dati utili per i confronti interni */
+        this.M = M;
+        this.N = N;
+        this.X = X;
         this.myWin = first ? CXGameState.WINP1 : CXGameState.WINP2;
         this.yourWin = first ? CXGameState.WINP2 : CXGameState.WINP1;
+        this.timeout_in_ms = timeout_in_secs * 1000;
+        this.maximizingPlayer = first ? true : false;
         this.player = first ? CXCellState.P1 : CXCellState.P2;
         this.enemy = first ? CXCellState.P2 : CXCellState.P1;
-        this.START_TIME = System.currentTimeMillis();
-        
-        /* Calcoliamo columnValueMultiplier */
-        /*columnValueMultiplier = new double[N];
-        for (int i = 0; i < N; i++) {
-            columnValueMultiplier[i] = gaussian1(i);
-        }
 
-        // Print columns values of the multiplier for debug and then exit the program
-        for (int i = 0; i < N; i++) {
-            System.out.println("Column " + i + " value: " + columnValueMultiplier[i]);
-        }
-
-        // Exit the program
-        System.exit(0); */
-
-        /* Calcoliamo un giro di eval */
-        this.tempoPerGiro = evalRound();
-
-        System.out.println("tempo per giro: " + tempoPerGiro);
-
-        
         /* Inizializzo l'euristica */
         euristicsCreator = new StartEuristicsCreator(N, M, X, first);
-    }
-
-    /** First of the gaussians, given a column returns the vaalue of the gaussian in that column */
-    private double gaussian1 (int column) {
-        double firstValue = 0;
-        double secondValue = 0;
-        
-        double sigma = 0.5;
-        double mu = this.N / 2;
-        double multiplier = 1/sigma * Math.sqrt(2 * Math.PI);
-
-
-        // We calculate the first value it using the column value
-        firstValue = 
-        // First part (1 over sigma * sqrt of 2pi)
-        (1 / (sigma * Math.sqrt(2 * Math.PI))) *
-        // Second part (e ^ (-(x - mu)^2 / 2 * sigma^2))
-        Math.pow(Math.E, -Math.pow(column - mu, 2) / (2 * Math.pow(sigma, 2)));
-        ;
-
-        // We calculate the second value using column + 1
-        secondValue =
-        // First part (1 over sigma * sqrt of 2pi)
-        (1 / (sigma * Math.sqrt(2 * Math.PI))) *
-        // Second part (e ^ (-(x - mu)^2 / 2 * sigma^2))
-        Math.pow(Math.E, -Math.pow(column + 1 - mu, 2) / (2 * Math.pow(sigma, 2)));
-
-
-        return (firstValue + secondValue) / 2;
     }
 
     @Override
@@ -104,39 +48,7 @@ public class Rododendro implements CXPlayer{
         return "Rododendro";
     }
 
-    // Funzione per calcolare la durata di tempo di un giro di valutazione
-    // inteso come ...
-    private long evalRound(){
-        CXBoard copy_b = new CXBoard(this.M, this.N, this.X);
-
-        long averageTime = 0;
-        int numOfTimes = 10;
-
-        for(int i = 0; i < numOfTimes + 1; i++) {
-            // Creiamo una variabile di tempo da ritornare e una copia della board
-            long time = java.lang.System.nanoTime();
-    
-            // funzione di valutazione 
-            eval(copy_b, this.player, copy_b.getAvailableColumns() , CXGameState.OPEN);
-            if ( i != 0 )
-                averageTime += java.lang.System.nanoTime() - time;
-        }
-
-
-        return averageTime / numOfTimes;
-    }
-
-    /**
-     * Funzione che valuta la situazione di una board.
-     * Data una board e dato  
-     * 
-     * 
-     * @param B
-     * @param currentPlayer
-     * @param ava
-     * @param state
-     * @return 
-    */
+    // Make a general score function
     private int eval(CXBoard B, CXCellState currentPlayer, Integer[] ava, CXGameState state){
         CXCellState enemyPlayer = currentPlayer == CXCellState.P1 ? CXCellState.P2 : CXCellState.P1;
 
@@ -306,61 +218,27 @@ public class Rododendro implements CXPlayer{
 
     @Override
     public int selectColumn(CXBoard b) {
-        if(b.getLastMove() == null || b.numOfMarkedCells() == 1){
-            return b.N/2;
-        }
-        // Impostiamo una colonna di default e la profondità
-        int returnColumn = b.getAvailableColumns()[b.N/2];
-        int depth = 0;
-        START_TIME = System.currentTimeMillis();
-        
-        try {
-            // Iterative Deepening
-            while (depth < 1) {
-                // Impostiamo le variabili per l'iterazione
-                int currentReturnColumn = returnColumn;
-                int currentValue = Integer.MIN_VALUE;
-                int currentMaxValue = Integer.MIN_VALUE;
-                
-                for (Integer i : b.getAvailableColumns()) {
-                    if(System.currentTimeMillis() - START_TIME > timeout_in_ms - ( 100 + (tempoPerGiro * 0.000001))){  //tempoPerGiro in base a che livello 
-                        throw new TimeoutException("Sta per superare il limite di tempo");
-                    } else {
-                        b.markColumn(i);
-                        currentValue = alphaBeta(b, depth, Integer.MAX_VALUE, Integer.MIN_VALUE, false); 
-                        b.unmarkColumn();
-                        if (currentValue > currentMaxValue) {
-                            currentMaxValue = currentValue;
-                            currentReturnColumn = i;
-                        }
-                    }
-                }
-    
-                // Abbiamo finito di guardare la depth corrente, salviamo i nuovi dati trovati e incrementiamo la depth
-                returnColumn = currentReturnColumn;
-                // Print della nuova colonna e della depth attuale [depth : valore]
-                depth++;
+        int maxValue = Integer.MIN_VALUE;
+        int returnCol = b.getAvailableColumns()[0];
+        for (Integer i : b.getAvailableColumns()) {
+            b.markColumn(i);
+            int value = alphaBeta(b, 6, Integer.MIN_VALUE, Integer.MAX_VALUE, false);
+            b.unmarkColumn();
+            if (value > maxValue) {
+                maxValue = value;
+                returnCol = i;
             }
-        } catch (TimeoutException e) {
-            // We were about to surpass the time limit, so we exit the for.
-            // Stampiamo la depth alla quale siamo arrivati:
-            System.out.println("Depth: " + depth);
         }
+        return returnCol;
         
-        return returnColumn;
-    } 
-        
-    // Alpha Beta Pruning
+    }
+
     private int alphaBeta(CXBoard b, int depth, int alpha, int beta, boolean maximizingPlayer) {
         int value;
-
-        // Se il gioco è finito o siamo arrivati alla profondità massima, ritorniamo lo score
         if (depth == 0 || !(b.gameState() == CXGameState.OPEN)) {
-            int score = eval(b, maximizingPlayer ? player : enemy, b.getAvailableColumns(), b.gameState());
-            return score;
+            value = eval(b, maximizingPlayer ? player : enemy, b.getAvailableColumns(), b.gameState());
+            return value;
         }
-
-        // Se è il turno del player, massimizziamo
         if (maximizingPlayer) {
             value = Integer.MIN_VALUE;
             // For each child of node
@@ -374,8 +252,6 @@ public class Rododendro implements CXPlayer{
                 }
             }
             return value;
-
-        // Se è il turno del nemico, minimizziamo
         } else {
             value = Integer.MAX_VALUE;
             for (Integer i : b.getAvailableColumns()) {
@@ -390,8 +266,6 @@ public class Rododendro implements CXPlayer{
             return value;
         }
     }
-
 }
-
 
 

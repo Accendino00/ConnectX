@@ -25,3 +25,21 @@ Conclusioni nostre: MCTS sarebbe una soluzione ideale quando non si riesce ad ar
 Altri metodi, ovvero l'ibrido tra MCTS e MM, oppure modi puramente euristici, oppure ancora metodi che aggiungono "complicità" di calcolo tendenzialmente riducono la performance. Sembra piuttosto che il numero di mosse che si possono guardare in avanti sia il fattore più importante per la performance.
 
 Inoltre, troviamo che la ricerca di euristiche complesse sia una difficoltà che difficilmente sarà appagata, in quanto probabilmente non riuscirà a battere MCTS. Se lo riesce a battere, probabilmente sarà in grado di farlo solo per alcuni dei valori di M, N o X. Quindi questo non sarà un focus del nostro progetto.
+
+
+
+---
+
+Da farsi (in questo ordine):
+- Implementare l'iterative deepening
+- Implementare l'eval in modo che contenga anche:
+  - Valutazione alta nel caso ci siano 2 possibili mosse che porta alla vittoria nella prossima mossa
+    - Quindi per esempio il caso dove si ha "--ooo--" e bisogna metterne 4 in fila, in questo caso sia a sinitra che a destra si vince
+    - Pertanto dobbiamo valutarla in modo estremamente più alta rispetto al valore di ora di "3" sottoinsiemi, per esempio "1000000" - come valore simbolico che indica una vittoria piuttosto assicurata.
+    - Sempre da mettere in considerazione e controllare  la vittoria dell'avversario in primis
+  - Valutare la stessa situazione per anche per il nemico, in modo da ritornare un valore molto basso dall'eval, indicando una sconfitta imminente
+  - Se entrambi hanno questa possiblità, capire chi potrebbe vincere
+  - Valutare l'interrupt della vittoria dell'avversario
+    - Questo valore è molto più alto del valore del doppio caso di vittoria
+- Implementare un albero che salva le mosse esplorate in precedenza nella classe player
+- Evitare di esplorare mosse che killano immediatamente
