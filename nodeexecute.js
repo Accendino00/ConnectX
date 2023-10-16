@@ -43,7 +43,8 @@ async function main() {
   try {
      //let additionalArgs = ` connectx.euristics_budspencer.BeatriceDiDante connectx.L1.L1`;
      // let additionalArgs = ` connectx.abp_budspencer.Rododendro connectx.sfidanti.Rebarbaro`;
-     let additionalArgs = ` connectx.MxLxPlayer.MxLxPlayer connectx.abp_budspencer.Rododendro`;
+     //let additionalArgs = ` connectx.MxLxPlayer.MxLxPlayer connectx.abp_budspencer.Rododendro`;
+     let additionalArgs = ` connectx.MxLxPlayer.MxLxPlayer connectx.abp_budspencer.Rododendrodos`;
      //   let additionalArgs = ` connectx.euristics_budspencer.HogRider connectx.euristics_budspencer.Leftist`;
      // let additionalArgs = ` connectx.euristics_budspencer.BeatriceDiDante connectx.abp_budspencer.Rododendro`;
      //let additionalArgs = ` connectx.L1.L1 connectx.euristics_budspencer.BeatriceDiDante`;
