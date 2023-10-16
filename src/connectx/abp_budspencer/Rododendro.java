@@ -110,6 +110,7 @@ public class Rododendro implements CXPlayer{
         CXBoard copy_b = new CXBoard(this.M, this.N, this.X);
 
         long averageTime = 0;
+        //da specificare perchè utilizziamo 10
         int numOfTimes = 10;
 
         for(int i = 0; i < numOfTimes + 1; i++) {
@@ -117,7 +118,7 @@ public class Rododendro implements CXPlayer{
             long time = java.lang.System.nanoTime();
     
             // funzione di valutazione 
-            eval(copy_b, this.player, copy_b.getAvailableColumns() , CXGameState.OPEN);
+            eval(copy_b);
             if ( i != 0 )
                 averageTime += java.lang.System.nanoTime() - time;
         }
@@ -137,31 +138,29 @@ public class Rododendro implements CXPlayer{
      * @param state
      * @return 
     */
-    private int eval(CXBoard B, CXCellState currentPlayer, Integer[] ava, CXGameState state){
-        CXCellState enemyPlayer = currentPlayer == CXCellState.P1 ? CXCellState.P2 : CXCellState.P1;
-
-        currentPlayer = myWin == CXGameState.WINP1 ? CXCellState.P1 : CXCellState.P2;
-        enemyPlayer = myWin == CXGameState.WINP1 ? CXCellState.P2 : CXCellState.P1;
+    private int eval(CXBoard board){
+        CXCellState currentPlayer = myWin == CXGameState.WINP1 ? CXCellState.P1 : CXCellState.P2;
+        CXCellState enemyPlayer = myWin == CXGameState.WINP1 ? CXCellState.P2 : CXCellState.P1;
 
         int playerScore = 0;
         int enemyScore = 0;
 
 
         // Se il gioco lo vince il player, ritorniamo il massimo valore
-        if(state == myWin ){
+        if(board.gameState() == myWin ){
             return Integer.MAX_VALUE;
         } 
         // Se il gioco lo vince il nemico, ritorniamo il minimo
-        else if (state == yourWin ) {
+        else if (board.gameState() == yourWin ) {
             return Integer.MIN_VALUE;
         } 
         // Se il gioco finisce in pareggio, ritorno 0
-        else if (state == CXGameState.DRAW) {
+        else if (board.gameState() == CXGameState.DRAW) {
             return 0;
         }
 
         // Prendiamo la matrice di celle
-        CXCellState cells[][] = B.getBoard();
+        CXCellState cells[][] = board.getBoard();
 
         // Definiamo i contatori
         int j, i, k;
@@ -169,20 +168,20 @@ public class Rododendro implements CXPlayer{
         // Numero di celle consecutive del player trovate per il sottoinsieme di celle considerato
         int playerCellHorizontal = 0;
         int playerCellVertical = 0;
-        int playerCellDiagonal = 0;
-        int playerCellDiagonalInverse = 0;
+        int playerCellDiagonalDownwards = 0;
+        int playerCellDiagonalUpwards = 0;
 
         // Numero di celle consecutive del nemico trovate per il sottoinsieme di celle considerato
         int enemyCellHorizontal = 0;
         int enemyCellVertical = 0;
-        int enemyCellDiagonal = 0;
-        int enemyCellDiagonalInverse = 0;
+        int enemyCellDiagonalDownwards = 0;
+        int enemyCellDiagonalUpwards = 0;
 
         // Flag se non è possibile considerare questo sottoinsieme in una certa direzione per problemi di spazio
         boolean impossibleCellHorizontal = false;
         boolean impossibleCellVertical = false;
-        boolean impossibleCellDiagonal = false;
-        boolean impossibleCellDiagonalInverse = false;
+        boolean impossibleCellDiagonalDownwards = false;
+        boolean impossibleCellDiagonalUpwards = false;
 
 
         // Contiamo la quantità di sottoinsiemi di X celle consecutive (del giocatore [almeno 1] o vuote)
@@ -198,34 +197,34 @@ public class Rododendro implements CXPlayer{
                 // Reinizializziamo i contatori
                 playerCellHorizontal = 0;
                 playerCellVertical = 0;
-                playerCellDiagonal = 0;
-                playerCellDiagonalInverse = 0;
+                playerCellDiagonalDownwards = 0;
+                playerCellDiagonalUpwards = 0;
 
                 // Reinizializziamo i contatori
                 enemyCellHorizontal = 0;
                 enemyCellVertical = 0;
-                enemyCellDiagonal = 0;
-                enemyCellDiagonalInverse = 0;
+                enemyCellDiagonalDownwards = 0;
+                enemyCellDiagonalUpwards = 0;
           
                 // Reinizializziamo i flag
                 impossibleCellHorizontal = false;
                 impossibleCellVertical = false;
-                impossibleCellDiagonal = false;
-                impossibleCellDiagonalInverse = false;
+                impossibleCellDiagonalDownwards = false;
+                impossibleCellDiagonalUpwards = false;
 
                 // Prima controlliamo se è possibile controllare per un sottoinsieme di X celle 
                 // a partire da questa cella (se non è possibile, non controlliamo)
-                if (i + this.X > this.N) {
+                if (i + (this.X-1) >= this.N) {
                     impossibleCellHorizontal = true;
                 }
-                if (j + this.X > this.M) {
+                if (j - (this.X-1) < 0) {
                     impossibleCellVertical = true;
                 }
-                if (j + this.X > this.M || i + this.X > this.N) {
-                    impossibleCellDiagonal = true;
+                if (j + (this.X-1) >= this.M || i + (this.X-1) >= this.N) {
+                    impossibleCellDiagonalDownwards = true;
                 }
-                if (j - this.X < 0 || i + this.X > this.N) {
-                    impossibleCellDiagonalInverse = true;
+                if (j - (this.X-1) < 0 || i + (this.X-1) >= this.N) {
+                    impossibleCellDiagonalUpwards = true;
                 }
 
                 // Adesso andiamo a fare i controlli
@@ -242,31 +241,31 @@ public class Rododendro implements CXPlayer{
 
                     // Controllo per le colonne
                     if (!impossibleCellVertical) {
-                        if (cells[j + k][i] == enemyPlayer) {
+                        if (cells[j - k][i] == enemyPlayer) {
                             enemyCellVertical++;;
                         }
-                        else if(cells[j + k][i] == currentPlayer){
+                        else if(cells[j - k][i] == currentPlayer){
                             playerCellVertical++;
                         }
                     }
 
                     // Controllo per le diagonali
-                    if (!impossibleCellDiagonal) {
+                    if (!impossibleCellDiagonalDownwards) {
                         if (cells[j + k][i + k] == enemyPlayer) {
-                            enemyCellDiagonal++;
+                            enemyCellDiagonalDownwards++;
                         }
                         else if(cells[j + k][i + k] == currentPlayer){
-                            playerCellDiagonal++;
+                            playerCellDiagonalDownwards++;
                         }
                     }
 
                     // Controllo per le diagonali inverse
-                    if (!impossibleCellDiagonalInverse) {
+                    if (!impossibleCellDiagonalUpwards) {
                         if (cells[j - k][i + k] == enemyPlayer) {
-                            enemyCellDiagonalInverse++;
+                            enemyCellDiagonalUpwards++;
                         }
                         else if(cells[j - k][i + k] == currentPlayer){
-                            playerCellDiagonalInverse++;
+                            playerCellDiagonalUpwards++;
                         }
                     }
                 }
@@ -285,17 +284,17 @@ public class Rododendro implements CXPlayer{
                     if (playerCellVertical == 0)
                         enemyScore += enemyCellVertical;
                 }
-                if (!impossibleCellDiagonal) {
-                    if (enemyCellDiagonal == 0)
-                        playerScore += playerCellDiagonal;
-                    if (playerCellDiagonal == 0)
-                        enemyScore += enemyCellDiagonal;
+                if (!impossibleCellDiagonalDownwards) {
+                    if (enemyCellDiagonalDownwards == 0)
+                        playerScore += playerCellDiagonalDownwards;
+                    if (playerCellDiagonalDownwards == 0)
+                        enemyScore += enemyCellDiagonalDownwards;
                 }
-                if (!impossibleCellDiagonalInverse) {
-                    if (enemyCellDiagonalInverse == 0)
-                        playerScore += playerCellDiagonalInverse;
-                    if (playerCellDiagonalInverse == 0)
-                        enemyScore += enemyCellDiagonalInverse;
+                if (!impossibleCellDiagonalUpwards) {
+                    if (enemyCellDiagonalUpwards == 0)
+                        playerScore += playerCellDiagonalUpwards;
+                    if (playerCellDiagonalUpwards == 0)
+                        enemyScore += enemyCellDiagonalUpwards;
                 }
             }
         }
@@ -304,47 +303,48 @@ public class Rododendro implements CXPlayer{
     }
 
 
+
     @Override
     public int selectColumn(CXBoard b) {
-        if(b.getLastMove() == null || b.numOfMarkedCells() == 1){
-            return b.N/2;
-        }
         // Impostiamo una colonna di default e la profondità
-        int returnColumn = b.getAvailableColumns()[b.N/2];
+        int returnColumn = b.getAvailableColumns()[(int) b.getAvailableColumns().length / 2];
         int depth = 0;
         START_TIME = System.currentTimeMillis();
         
         try {
             // Iterative Deepening
-            while (depth < 1) {
+            while (depth < Integer.MAX_VALUE) {
                 // Impostiamo le variabili per l'iterazione
                 int currentReturnColumn = returnColumn;
                 int currentValue = Integer.MIN_VALUE;
                 int currentMaxValue = Integer.MIN_VALUE;
                 
-                for (Integer i : b.getAvailableColumns()) {
-                    if(System.currentTimeMillis() - START_TIME > timeout_in_ms - ( 100 + (tempoPerGiro * 0.000001))){  //tempoPerGiro in base a che livello 
-                        throw new TimeoutException("Sta per superare il limite di tempo");
-                    } else {
-                        b.markColumn(i);
-                        currentValue = alphaBeta(b, depth, Integer.MAX_VALUE, Integer.MIN_VALUE, false); 
-                        b.unmarkColumn();
-                        if (currentValue > currentMaxValue) {
-                            currentMaxValue = currentValue;
-                            currentReturnColumn = i;
-                        }
+                long scartoTimeout = (long) ((0.000001 * N * (double)tempoPerGiro * (Math.pow(N, depth + 1) - 1)) + 200);
+                if((System.currentTimeMillis() - START_TIME) > (timeout_in_ms - scartoTimeout)){  //tempoPerGiro in base a che livello, sommatoria
+                    // Output di tutti i dati del tempo
+                    // System.out.println("Tempo per giro: " + tempoPerGiro*0.000001 + "ms, scarto timeout: " + scartoTimeout + "ms");
+                    throw new TimeoutException("Sta per superare il limite di tempo");
+                }
+                
+                for (Integer i : b.getAvailableColumns()) { 
+                    b.markColumn(i);
+                    currentValue = alphaBeta(b, depth, Integer.MIN_VALUE, Integer.MAX_VALUE, false);
+                    b.unmarkColumn();
+                    if (currentValue > currentMaxValue) {
+                        currentMaxValue = currentValue;
+                        currentReturnColumn = i;
                     }
                 }
-    
+                depth++;
                 // Abbiamo finito di guardare la depth corrente, salviamo i nuovi dati trovati e incrementiamo la depth
                 returnColumn = currentReturnColumn;
                 // Print della nuova colonna e della depth attuale [depth : valore]
-                depth++;
+                // System.out.println("Depth: " + depth + ", Column: " + returnColumn + ", Value: " + currentMaxValue);
             }
         } catch (TimeoutException e) {
             // We were about to surpass the time limit, so we exit the for.
             // Stampiamo la depth alla quale siamo arrivati:
-            System.out.println("Depth: " + depth);
+            //System.out.println("Depth: " + depth);
         }
         
         return returnColumn;
@@ -356,7 +356,7 @@ public class Rododendro implements CXPlayer{
 
         // Se il gioco è finito o siamo arrivati alla profondità massima, ritorniamo lo score
         if (depth == 0 || !(b.gameState() == CXGameState.OPEN)) {
-            int score = eval(b, maximizingPlayer ? player : enemy, b.getAvailableColumns(), b.gameState());
+            int score = eval(b);
             return score;
         }
 

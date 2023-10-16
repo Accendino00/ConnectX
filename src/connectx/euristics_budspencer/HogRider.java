@@ -71,8 +71,8 @@ public class HogRider implements CXPlayer {
                     // Controlliamo se siamo a riga 0 oppure se sotto le celle vuote c'è una cella occupata
                     if(j == this.M-1) // Siamo a riga 0, cioe M-1 poiche la tabella è stampata al contrario
                         return DOUBLEVICTORY;
-                    if(j-1 >= 0){ // Controllo di non avere un accesso fuori dalla matrice
-                        if(((cells[j - 1][colonnaPrima] != CXCellState.FREE) && (cells[j - 1][colonnaUltima] != CXCellState.FREE))){
+                    if(j+1 <= this.M-1){ // Controllo di non avere un accesso fuori dalla matrice
+                        if(((cells[j + 1][colonnaPrima] != CXCellState.FREE) && (cells[j + 1][colonnaUltima] != CXCellState.FREE))){
                             return DOUBLEVICTORY;
                         }
                     } else {
@@ -81,8 +81,8 @@ public class HogRider implements CXPlayer {
                 }
                 break;
 
-                // Caso diagonale
-                case 2:
+                // Caso diagonale inversa
+                case 3:
                 // Controlliamo se le celle delle colonne da controllare sono vuote, se sono a riga 0 allora j-1 non
                 // è una cella valida quindi aggiungo un controllo per sicurezza
                 if(j-1 >= 0 && j+1 < B.M){
@@ -100,8 +100,8 @@ public class HogRider implements CXPlayer {
                 }
                 break;
 
-                // Caso diagonale inversa
-                case 3:
+                // Caso diagonale
+                case 2:
                 // Controlliamo se le celle delle colonne da controllare sono vuote, se sono a riga 0 allora j-1 non
                 // è una cella valida quindi aggiungo un controllo per sicurezza
                 if(j-1 >= 0 && j+1 < B.M){
