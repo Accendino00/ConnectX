@@ -53,13 +53,14 @@ public class Rododendrotres implements CXPlayer{
         
         /*
          * Inizializziamo l'albero
-         */
-        this.root.node = new int[N][M];
-        for (int i = 0; i < N; i++) {
+         * 
+         *         for (int i = 0; i < N; i++) {
             for (int j = M - 1; j >= 0; j--) {
                 this.root.node[i][j] = 0;
             }
         }
+         */
+        this.root.node = new CXBoard(M, N, X);
         this.root.childNodes = null;
 
         /* Calcoliamo columnValueMultiplier */
@@ -115,6 +116,7 @@ public class Rododendrotres implements CXPlayer{
         return (firstValue + secondValue) / 2;
     }
 
+    /*
     // Funzione per convertire la board da CXCellState a Binary, e salvarsi la configurazione
     private void populateNode(CXBoard board, TreeNode aggiunta){
         for (int i = 0; i < N; i++) {
@@ -127,6 +129,9 @@ public class Rododendrotres implements CXPlayer{
             }
         }
     }
+     */
+
+
 
     @Override
     public String playerName() {
@@ -383,16 +388,28 @@ public class Rododendrotres implements CXPlayer{
     private int alphaBeta(CXBoard b, int depth, int alpha, int beta, boolean maximizingPlayer) {
         int value;
 
+        // Guardo se trovo la board nella lista
+        for (TreeNode child : root.getChildNodes()) {
+            if (child.getNode().equals(b)) {
+                root = child;
+                return 0;
+            }
+        }
+
+        // Prioritizzo le colonne in base all'eval
+
+
+
+
         // Se il gioco è finito o siamo arrivati alla profondità massima, ritorniamo lo score
         if (depth == 0 || !(b.gameState() == CXGameState.OPEN)) {
             int score = eval(b);
             TreeNode aggiunta = new TreeNode(null);
-            aggiunta.node = new int[N][M];
-            aggiunta.addChild(new TreeNode(null));
+            aggiunta.node = b.copy();
             root.addChild(aggiunta);
             // scorrere il puntatore di root
-            root = root.getChildNodes().get(0); //trovare il modo per vedere tutti gli N figli
-            populateNode(b, aggiunta);
+            root = aggiunta;           
+            //populateNode(b, aggiunta);
             return score;
         }
 

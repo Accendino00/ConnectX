@@ -2,13 +2,15 @@ package connectx.abp_budspencer;
 
 import java.util.LinkedList;
 import java.util.List;
+
+import connectx.CXBoard;
  
 public class TreeNode {
  
-  public int[][] node;
+  public CXBoard node;
   public List<TreeNode> childNodes;
  
-  public TreeNode(int[][] node) {
+  public TreeNode(CXBoard node) {
     this.node = node;
     this.childNodes = new LinkedList<>();
   }
@@ -22,7 +24,7 @@ public class TreeNode {
     BreathFirstSearchPrintTreeNodes.printNodes(this);
   }
   */
-  public int[][] getNode() {
+  public CXBoard getNode() {
     return node;
   }
  
